@@ -13,7 +13,6 @@ import {
   X,
   CheckCircle2,
   AlertTriangle,
-  AlertOctagon,
   Info,
   MoreVertical,
   Plus,
@@ -25,9 +24,6 @@ import {
   Share2,
   Trash2,
   MessageSquare,
-  ArrowUpDown,
-  Settings2,
-  XCircle,
   Battery,
   Thermometer,
   Wifi,
@@ -43,7 +39,7 @@ import {
   Cpu,
   Zap,
 } from "lucide-react";
-import { INSTALLATIONS_DATA } from "@/lib/seed-data";
+import { useInstallations } from "@/hooks/use-dexie-data";
 import { DeleteConfirmModal } from "@/components/states/delete-confirm-modal";
 import { UndoSnackbar } from "@/components/states/undo-snackbar";
 import { EmptyState } from "@/components/states/empty-state";
@@ -96,7 +92,8 @@ function hashStr(str: string): number {
   return Math.abs(hash);
 }
 
-function generateHistoryData(): HistoryEntry[] {
+function generateHistoryData(installationsData: typeof import("@/lib/seed-data").INSTALLATIONS_DATA): HistoryEntry[] {
+  if (installationsData.length === 0) return [];
   const entries: HistoryEntry[] = [];
   const statuses: HistoryEntry["status"][] = ["ok", "critical", "attention", "info"];
   const syncStates: HistoryEntry["syncState"][] = ["synced", "pending", "local", "failed"];
@@ -128,8 +125,8 @@ function generateHistoryData(): HistoryEntry[] {
 
   for (let i = 0; i < 248; i++) {
     const h = hashStr(`hist-${i}`);
-    const instIdx = h % INSTALLATIONS_DATA.length;
-    const inst = INSTALLATIONS_DATA[instIdx];
+    const instIdx = h % installationsData.length;
+    const inst = installationsData[instIdx];
     const eventTemplate = EVENT_TEMPLATES[h % EVENT_TEMPLATES.length];
     const detailIdx = h % detailSets.length;
     const inspectorIdx = h % inspectors.length;
@@ -174,8 +171,6 @@ function generateHistoryData(): HistoryEntry[] {
   return entries;
 }
 
-const HISTORY_DATA = generateHistoryData();
-
 const STATUS_CONFIG = {
   ok: { label: "OK", textClass: "text-green-700 dark:text-green-400", bgClass: "bg-green-50 dark:bg-green-950/40", borderClass: "border-green-200 dark:border-green-800", dotClass: "bg-green-500" },
   critical: { label: "Critical", textClass: "text-red-700 dark:text-red-400", bgClass: "bg-red-50 dark:bg-red-950/40", borderClass: "border-red-200 dark:border-red-800", dotClass: "bg-red-500" },
@@ -188,13 +183,6 @@ const SYNC_CONFIG = {
   pending: { label: "Pending", textClass: "text-orange-700 dark:text-orange-400", bgClass: "bg-orange-50 dark:bg-orange-950/40", borderClass: "border-orange-200 dark:border-orange-800", dotClass: "bg-orange-500" },
   local: { label: "Local", textClass: "text-slate-600 dark:text-slate-400", bgClass: "bg-slate-100 dark:bg-slate-800", borderClass: "border-slate-200 dark:border-slate-700", dotClass: "bg-slate-400" },
   failed: { label: "Failed", textClass: "text-red-700 dark:text-red-400", bgClass: "bg-red-50 dark:bg-red-950/40", borderClass: "border-red-200 dark:border-red-800", dotClass: "bg-red-500" },
-};
-
-const STATUS_ICONS = {
-  critical: { icon: AlertOctagon, color: "text-red-600 dark:text-red-400" },
-  ok: { icon: CheckCircle2, color: "text-green-600 dark:text-green-400" },
-  attention: { icon: AlertTriangle, color: "text-orange-600 dark:text-orange-400" },
-  info: { icon: Info, color: "text-blue-600 dark:text-blue-400" },
 };
 
 const TYPE_ICONS: Record<string, typeof Fan> = {
@@ -245,6 +233,8 @@ const ALL_FILTER_OPTIONS = [
 ];
 
 export default function HistoryPage() {
+  const { installations: INSTALLATIONS_DATA } = useInstallations();
+  const HISTORY_DATA = useMemo(() => generateHistoryData(INSTALLATIONS_DATA), [INSTALLATIONS_DATA]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [installationFilter, setInstallationFilter] = useState("all");
@@ -261,13 +251,21 @@ export default function HistoryPage() {
   const [dateFrom, setDateFrom] = useState("2026-01-01");
   const [dateTo, setDateTo] = useState("2026-01-12");
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [historyEntries, setHistoryEntries] = useState(HISTORY_DATA);
+  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deletedEntry, setDeletedEntry] = useState<HistoryEntry | null>(null);
   const [showUndo, setShowUndo] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
   const addFilterRef = useRef<HTMLDivElement>(null);
+  const historySeeded = useRef(false);
+
+  useEffect(() => {
+    if (!historySeeded.current && HISTORY_DATA.length > 0) {
+      setHistoryEntries(HISTORY_DATA);
+      historySeeded.current = true;
+    }
+  }, [HISTORY_DATA]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

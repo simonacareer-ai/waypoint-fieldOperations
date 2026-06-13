@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  User,
   Mail,
   Building2,
   Tablet,
@@ -18,7 +17,7 @@ import {
 
 export default function ProfilePage() {
   return (
-    <div className="space-y-6 max-w-[800px]">
+    <div className="space-y-6">
       <PageHeader title="Profile" description="Your account, workspace, and device info." />
 
       <Card>

@@ -18,7 +18,7 @@ export default function SettingsPage() {
   const [reducedMotion, setReducedMotion] = useState(false);
 
   return (
-    <div className="space-y-6 max-w-[800px]">
+    <div className="space-y-6">
       <PageHeader
         title="Settings"
         description="Manage theme, sync preferences, and notifications."

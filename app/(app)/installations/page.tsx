@@ -21,7 +21,8 @@ import {
   BarChart3,
   ArrowUpDown,
 } from "lucide-react";
-import { INSTALLATIONS_DATA, getInstallationCounts } from "@/lib/seed-data";
+import { getInstallationCounts } from "@/lib/seed-data";
+import { useInstallations } from "@/hooks/use-dexie-data";
 import { EmptyState } from "@/components/states/empty-state";
 
 const TYPE_ICONS: Record<string, typeof Fan> = {
@@ -80,6 +81,7 @@ function HealthGauge({ percent, status }: { percent: number; status: string }) {
 }
 
 export default function InstallationsPage() {
+  const { installations: INSTALLATIONS_DATA } = useInstallations();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<"lastInspectedAt" | null>(null);
@@ -102,7 +104,7 @@ export default function InstallationsPage() {
       });
     }
     return items;
-  }, [search, sortField, sortDir]);
+  }, [search, sortField, sortDir, INSTALLATIONS_DATA]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginated = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);

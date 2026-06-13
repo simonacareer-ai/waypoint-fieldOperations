@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Battery, Thermometer, Activity, RadioTower, Minus, Plus, Info } from "lucide-react";
+import { Battery, Thermometer, Activity, Minus, Plus, Info } from "lucide-react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { WizardStepper } from "@/components/inspection-wizard/wizard-stepper";
 import { StickyFooter } from "@/components/inspection-wizard/sticky-footer";
@@ -87,7 +87,7 @@ export default function Step3Page() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5"
+                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5 cursor-pointer"
                 onClick={() => setTemperature(Math.max(-20, temperature - 1))}
               >
                 <Minus style={{ height: 25, width: 25 }} />
@@ -99,7 +99,7 @@ export default function Step3Page() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5"
+                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5 cursor-pointer"
                 onClick={() => setTemperature(Math.min(80, temperature + 1))}
               >
                 <Plus style={{ height: 25, width: 25 }} />
@@ -123,7 +123,7 @@ export default function Step3Page() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5"
+                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5 cursor-pointer"
                 onClick={() => setRotorSpeed(Math.max(0, rotorSpeed - 10))}
               >
                 <Minus style={{ height: 25, width: 25 }} />
@@ -135,7 +135,7 @@ export default function Step3Page() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5"
+                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5 cursor-pointer"
                 onClick={() => setRotorSpeed(rotorSpeed + 10)}
               >
                 <Plus style={{ height: 25, width: 25 }} />
@@ -159,7 +159,7 @@ export default function Step3Page() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5"
+                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5 cursor-pointer"
                 onClick={() => setVibration(Math.max(0, +(vibration - 0.1).toFixed(1)))}
               >
                 <Minus style={{ height: 25, width: 25 }} />
@@ -171,7 +171,7 @@ export default function Step3Page() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5"
+                className="h-16 w-16 rounded-xl text-lg text-primary hover:bg-primary/5 cursor-pointer"
                 onClick={() => setVibration(+(vibration + 0.1).toFixed(1))}
               >
                 <Plus style={{ height: 25, width: 25 }} />

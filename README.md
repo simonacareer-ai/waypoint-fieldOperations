@@ -1,6 +1,6 @@
 # Waypoint Field Operations
 
-An offline-first inspection platform for field technicians operating industrial assets such as wind turbines, weather stations, and generators. Optimized for harsh environments, intermittent connectivity, glove use, sunlight glare, and interruptions.
+An offline-first inspection platform for field technicians working on remote industrial assets (wind turbines, weather stations, generators). Designed for harsh conditions: gloved hands, direct sunlight, intermittent connectivity, and frequent interruptions mid-task.
 
 ## Quick Start
 
@@ -12,69 +12,78 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser. No credentials, database, or external services required — the app runs entirely on seeded client-side data.
+Open [http://localhost:3000](http://localhost:3000). No database, no `.env` file, no external services — everything runs client-side on seeded demo data.
+
+**Login**: Use any email (e.g. `tech@waypoint.io`) and any 6+ character password. Authentication is simulated — all credentials are accepted.
+
+## What This Demonstrates
+
+- **Capture flow**: A 4-step inspection wizard with oversized touch targets, session-persisted state, and immediate local-save confirmation.
+- **Browsing at density**: Tables with 241 inspections across 18 installations, with filters, search, date ranges, and pagination.
+- **Offline trust**: Persistent sync visibility, a sync console with progress/retry/conflict-resolution UX, and "saved locally" reassurance throughout.
+- **UI states**: Empty results, loading skeletons, error boundaries, destructive action confirmation with undo.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 |
-| UI Components | shadcn/ui (base-nova style) |
-| Icons | Lucide React |
-| Client State | Zustand |
-| Offline DB | Dexie (IndexedDB) |
-| Theme | next-themes (light/dark) |
+| Layer | Choice | Why |
+|-------|--------|-----|
+| Framework | Next.js 16 (App Router) | File-based routing, React Server Components where useful |
+| Language | TypeScript | Type safety across components and data layer |
+| Styling | Tailwind CSS v4 | Token-driven, responsive-first utilities |
+| UI Base | shadcn/ui | Accessible primitives with full control over styling |
+| Icons | Lucide React | Consistent, tree-shakeable icon set |
+| Client State | Zustand | Lightweight, no boilerplate |
+| Offline DB | Dexie (IndexedDB wrapper) | Simple API, good TypeScript support, outbox pattern for sync |
+| Theme | next-themes | Dark mode via CSS custom properties, not overrides |
 
 ## Demo Data
 
-The app ships with **241 inspections** across **18 installations** spanning **January–June 2026** (~5.5 months). All data is generated deterministically from `lib/seed-data.ts` — no database or API keys needed.
+The app seeds **241 inspections** across **18 installations** spanning **January–June 2026** (~5.5 months). Data is generated deterministically in `lib/seed-data.ts` — refreshing the page always produces the same dataset. This density is intentional: it tests browsing, filtering, and pagination behavior at realistic field-team scale.
 
 ## Project Structure
 
 ```
-├── app/
-│   ├── (public)/           # Auth pages (login, workspace, setup, welcome)
-│   ├── (app)/              # Protected app pages
-│   │   ├── dashboard/      # Overview with KPIs and quick actions
-│   │   ├── inspections/    # Filterable inspection table
-│   │   ├── history/        # Audit log with search, filters, pagination
-│   │   ├── installations/  # Asset registry with health gauges
-│   │   ├── inspection/     # 4-step new inspection wizard
-│   │   ├── offline-sync/   # Sync queue and status
-│   │   ├── settings/       # Theme, sync, notification preferences
-│   │   └── profile/        # User account info
-│   └── api/                # API route stubs (mock)
-├── components/
-│   ├── app-shell/          # Sidebar, topbar, page header
-│   ├── dashboard/          # Dashboard widgets
-│   ├── inspection-wizard/  # Wizard stepper + sticky footer
-│   ├── states/             # Empty, error, delete confirm, undo snackbar
-│   └── ui/                 # shadcn/ui primitives
-├── hooks/                  # Custom React hooks
-├── lib/
-│   ├── seed-data.ts        # 241 inspections, 18 installations
-│   ├── sync/               # Sync engine (Dexie outbox pattern)
-│   └── validations/        # Zod schemas
-├── store/                  # Zustand stores (app, sync, wizard, filters, theme)
-├── styles/tokens.css       # Design tokens (colors, spacing, typography)
-└── public/manifest.json    # PWA manifest
+app/
+├── (public)/              Login, workspace selection, device setup
+├── (app)/                 Authenticated app shell
+│   ├── dashboard/         KPIs, critical assets, resume draft
+│   ├── inspections/       Filterable inspection table with stat cards
+│   ├── history/           Audit log with date range, tags, actions
+│   ├── installations/     Asset registry with health gauges
+│   ├── inspection/        4-step wizard (new + draft resume)
+│   ├── offline-sync/      Sync queue, progress, conflict resolution
+│   └── settings/          Theme, sync prefs, notifications
+components/
+├── app-shell/             Sidebar, topbar, page header
+├── dashboard/             Dashboard-specific widgets
+├── inspection-wizard/     Stepper, sticky footer
+├── offline-sync/          Conflict resolution panel
+├── states/                Empty, error, delete confirm, undo snackbar
+└── ui/                    shadcn/ui primitives (button, card, dialog, etc.)
+lib/
+├── seed-data.ts           Deterministic data generation
+├── sync/                  Sync engine (simulated outbox pattern)
+└── validations/           Zod schemas for forms
+store/                     Zustand stores (app, sync, wizard, filters, theme)
+styles/tokens.css          Design tokens (color, spacing, typography)
 ```
 
 ## Key Routes
 
-| Route | Description |
-|-------|-------------|
-| `/dashboard` | KPIs, critical assets, resume draft, inspections due |
-| `/inspections` | Filterable/sortable inspection table with stats |
-| `/inspection/new` | Creates draft and enters 4-step wizard |
-| `/inspection/draft/[id]/step-1..4` | Wizard: select asset → status → measurements → notes & save |
-| `/history` | Full audit log with search, date range, tag filters |
-| `/installations` | Asset registry with health gauges and status |
-| `/offline-sync` | Sync queue, progress, failed items, retry |
-| `/settings` | Theme toggle, sync preferences, notifications |
+| Route | Purpose |
+|-------|---------|
+| `/dashboard` | "What needs my attention today?" overview |
+| `/inspections` | Browse and filter all inspections |
+| `/inspection/new` | Start a new inspection (creates draft, enters wizard) |
+| `/inspection/draft/[id]/step-1..4` | Wizard: asset → status → measurements → notes & save |
+| `/history` | Audit log with full-text search, date range, tag filters |
+| `/installations` | Asset registry with health status |
+| `/offline-sync` | Sync queue, failed items, conflict resolution |
+| `/settings` | Preferences (theme, auto-sync, notifications) |
 
 ## Design Decisions
 
-See [DESIGN.md](./DESIGN.md) for UX rationale, trade-offs, and next steps.
+See [DESIGN.md](./DESIGN.md) for:
+- The 2–3 most important UX decisions and rejected alternatives
+- What was deliberately simplified and why
+- What I would build next with one more week

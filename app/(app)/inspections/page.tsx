@@ -19,27 +19,19 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  MoreHorizontal,
   Clock,
   Flag,
-  Upload,
-  Settings2,
   CloudUpload,
   X,
 } from "lucide-react";
-import { INSPECTIONS_DATA, INSTALLATIONS_DATA } from "@/lib/seed-data";
+import { INSTALLATIONS_DATA } from "@/lib/seed-data";
+import { useInspections } from "@/hooks/use-dexie-data";
 import { EmptyState } from "@/components/states/empty-state";
 
 const STATUS_CONFIG = {
   ok: { label: "OK", dotClass: "bg-green-500", textClass: "text-green-700 dark:text-green-400", bgClass: "bg-green-50 dark:bg-green-950/40", borderClass: "border-green-200 dark:border-green-800" },
   attention: { label: "Attention", dotClass: "bg-orange-500", textClass: "text-orange-700 dark:text-orange-400", bgClass: "bg-orange-50 dark:bg-orange-950/40", borderClass: "border-orange-200 dark:border-orange-800" },
   critical: { label: "Critical", dotClass: "bg-red-500", textClass: "text-red-700 dark:text-red-400", bgClass: "bg-red-50 dark:bg-red-950/40", borderClass: "border-red-200 dark:border-red-800" },
-};
-
-const PRIORITY_CONFIG = {
-  critical: { label: "Critical", icon: XCircle, color: "text-red-600 dark:text-red-400" },
-  attention: { label: "Attention", icon: AlertTriangle, color: "text-orange-600 dark:text-orange-400" },
-  ok: { label: "OK", icon: CheckCircle2, color: "text-green-600 dark:text-green-400" },
 };
 
 const SYNC_CONFIG = {
@@ -50,9 +42,11 @@ const SYNC_CONFIG = {
 };
 
 const SAVED_FILTERS = [
-  { id: "mine", label: "My Inspections", icon: CheckCircle2, active: true, detail: "Assigned to: Simona D. • Status: All • Last 30 days" },
-  { id: "due-today", label: "Due Today", icon: Clock, detail: "Due date: Today • Status: Attention, Critical • All installations" },
-  { id: "overdue", label: "Overdue", icon: XCircle, detail: "Status: Critical • Past due date • All inspectors" },
+  { id: "battery", label: "Battery", icon: CheckCircle2, detail: "Battery level below 30%" },
+  { id: "temperature", label: "Temperature", icon: AlertTriangle, detail: "Temperature above threshold" },
+  { id: "signal", label: "Signal", icon: RefreshCw, detail: "Signal strength issues" },
+  { id: "vibration", label: "Vibration", icon: Flag, detail: "Vibration anomaly detected" },
+  { id: "overdue", label: "Overdue", icon: Clock, detail: "Past due date inspections" },
 ];
 
 const ROWS_PER_PAGE_OPTIONS = [6, 10, 25, 50, 100];
@@ -60,6 +54,7 @@ const ROWS_PER_PAGE_OPTIONS = [6, 10, 25, 50, 100];
 export default function InspectionsPage() {
   const searchParams = useSearchParams();
   const statusParam = searchParams.get("status");
+  const { inspections: INSPECTIONS_DATA, loading: dbLoading } = useInspections();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(statusParam || "all");
@@ -68,12 +63,12 @@ export default function InspectionsPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(6);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [showStats, setShowStats] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [statsDismissed, setStatsDismissed] = useState(false);
   const [syncDismissed, setSyncDismissed] = useState(false);
-  const [showManageFilters, setShowManageFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>(["battery", "temperature", "signal"]);
+  const [showAddFilter, setShowAddFilter] = useState(false);
 
   useEffect(() => {
     if (statusParam) setStatusFilter(statusParam);
@@ -99,7 +94,7 @@ export default function InspectionsPage() {
     });
 
     return result;
-  }, [search, statusFilter, installationFilter, sortField, sortDir]);
+  }, [search, statusFilter, installationFilter, sortField, sortDir, INSPECTIONS_DATA]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -112,22 +107,7 @@ export default function InspectionsPage() {
     const drafts = INSPECTIONS_DATA.filter((i) => i.isDraft).length;
     const pendingSync = INSPECTIONS_DATA.filter((i) => i.syncState === "pending" || i.syncState === "local-only").length;
     return { total, critical, attention, ok, drafts, pendingSync };
-  }, []);
-
-  const toggleSelectAll = () => {
-    if (selectedRows.size === paginatedData.length) {
-      setSelectedRows(new Set());
-    } else {
-      setSelectedRows(new Set(paginatedData.map((r) => r.id)));
-    }
-  };
-
-  const toggleRow = (id: string) => {
-    const next = new Set(selectedRows);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedRows(next);
-  };
+  }, [INSPECTIONS_DATA]);
 
   useEffect(() => { setCurrentPage(1); }, [search, statusFilter, installationFilter, rowsPerPage]);
 
@@ -166,7 +146,7 @@ export default function InspectionsPage() {
       {showFilters && (
       <div className="space-y-2 bg-card rounded-lg border border-border p-2.5 mt-[-8px]">
         <div className="flex flex-col md:flex-row gap-3.5">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search installations, tags, inspectors..."
@@ -195,10 +175,10 @@ export default function InspectionsPage() {
             <option value="attention">Attention</option>
             <option value="ok">OK</option>
           </select>
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              className="h-12 px-4 text-sm gap-1.5"
+              className="h-12 px-4 text-sm gap-1.5 !h-[48px] !min-h-[48px]"
               onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
             >
               <ArrowUpDown className="h-3.5 w-3.5" />
@@ -208,67 +188,63 @@ export default function InspectionsPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] text-muted-foreground">Saved Filters</span>
-          {SAVED_FILTERS.map((f) => {
+          {activeFilters.slice(0, 3).map((filterId) => {
+            const f = SAVED_FILTERS.find((sf) => sf.id === filterId);
+            if (!f) return null;
             const Icon = f.icon;
             return (
-              <div key={f.id} className="relative group">
+              <span
+                key={f.id}
+                className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full text-[12px] font-medium border border-border bg-card text-foreground h-[44px] cursor-pointer"
+              >
+                {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
+                {f.label}
                 <button
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border cursor-pointer transition-colors ${
-                    f.active
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card text-foreground border-border hover:bg-muted/50"
-                  }`}
+                  onClick={() => setActiveFilters((prev) => prev.filter((id) => id !== f.id))}
+                  className="hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center ml-0.5"
                 >
-                  <Icon className="h-3 w-3" />
-                  {f.label}
+                  <X className="h-3 w-3" />
                 </button>
-                <div className="absolute left-0 top-full mt-1.5 z-50 hidden group-hover:block">
-                  <div className="bg-card border border-border rounded-lg shadow-lg px-3 py-2 text-[11px] text-muted-foreground whitespace-nowrap">
-                    {f.detail}
-                  </div>
-                </div>
-              </div>
+              </span>
             );
           })}
+          {activeFilters.length > 3 && (
+            <span className="text-[12px] font-medium text-muted-foreground">
+              +{activeFilters.length - 3} more
+            </span>
+          )}
           <div className="relative">
             <button
-              onClick={() => setShowManageFilters(!showManageFilters)}
-              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-primary cursor-pointer hover:underline"
+              onClick={() => setShowAddFilter(!showAddFilter)}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-[12px] font-medium text-primary cursor-pointer hover:underline"
             >
-              <Settings2 className="h-3 w-3" />
-              Manage Filters
+              <Plus className="h-3.5 w-3.5" />
+              <span className="underline">Add Filter</span>
             </button>
-            {showManageFilters && (
+            {showAddFilter && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowManageFilters(false)} />
-                <div className="absolute left-0 top-full mt-2 z-50 w-72 bg-card border border-border rounded-xl shadow-lg px-4 pt-1 pb-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Manage Saved Filters</h3>
-                    <button onClick={() => setShowManageFilters(false)} className="cursor-pointer flex items-center justify-center">
-                      <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {SAVED_FILTERS.map((f) => {
-                      const Icon = f.icon;
-                      return (
-                        <div key={f.id} className="flex items-start gap-2 p-2 rounded-lg border border-border bg-muted/20">
-                          <Icon className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-foreground">{f.label}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{f.detail}</p>
-                          </div>
-                          <button className="text-[10px] text-red-500 hover:underline cursor-pointer shrink-0">
-                            Remove
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <Button variant="outline" className="w-full h-8 text-xs font-medium">
-                    + Create New Filter
-                  </Button>
+                <div className="fixed inset-0 z-40" onClick={() => setShowAddFilter(false)} />
+                <div className="absolute left-0 top-full mt-2 z-50 w-56 bg-card border border-border rounded-lg shadow-lg py-2">
+                  <p className="px-3 pb-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Add a filter</p>
+                  {SAVED_FILTERS.filter((sf) => !activeFilters.includes(sf.id)).map((sf) => {
+                    const Icon = sf.icon;
+                    return (
+                      <button
+                        key={sf.id}
+                        className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted/60 transition-colors cursor-pointer flex items-center gap-2"
+                        onClick={() => {
+                          setActiveFilters((prev) => [...prev, sf.id]);
+                          setShowAddFilter(false);
+                        }}
+                      >
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                        {sf.label}
+                      </button>
+                    );
+                  })}
+                  {SAVED_FILTERS.filter((sf) => !activeFilters.includes(sf.id)).length === 0 && (
+                    <p className="px-3 py-2 text-xs text-muted-foreground">All filters applied</p>
+                  )}
                 </div>
               </>
             )}

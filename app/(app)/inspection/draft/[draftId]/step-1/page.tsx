@@ -6,7 +6,7 @@ import { Search, CheckCircle2, ChevronRight, MapPin, Check, Fan, CloudSun, Bot, 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { WizardStepper } from "@/components/inspection-wizard/wizard-stepper";
-import { INSTALLATIONS_DATA } from "@/lib/seed-data";
+import { useInstallations } from "@/hooks/use-dexie-data";
 
 const STEPS = [
   { label: "Installation", description: "Select asset" },
@@ -58,6 +58,7 @@ function getTimeSince(dateStr: string) {
 export default function Step1Page() {
   const params = useParams();
   const router = useRouter();
+  const { installations: INSTALLATIONS_DATA } = useInstallations();
   const storageKey = `wizard-${params.draftId}-step1`;
   const [selected, setSelected] = useState<string | null>(null);
   const [search, setSearch] = useState("");

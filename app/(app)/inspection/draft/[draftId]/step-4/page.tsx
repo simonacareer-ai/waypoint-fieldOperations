@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Camera, FileText, Tag, Trash2, X, Plus, Battery, Thermometer, Wifi, Activity, Wrench, CheckCircle2, Cloud } from "lucide-react";
+import { Camera, FileText, Tag, Trash2, X, Plus, Battery, Thermometer, Wifi, Activity, Wrench, CheckCircle2 } from "lucide-react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { WizardStepper } from "@/components/inspection-wizard/wizard-stepper";
 import { StickyFooter } from "@/components/inspection-wizard/sticky-footer";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { addInspection } from "@/hooks/use-dexie-data";
 
 const STEPS = [
   { label: "Installation", description: "Select asset" },
@@ -42,7 +43,22 @@ export default function Step4Page() {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    const installationId = typeof window !== "undefined"
+      ? sessionStorage.getItem("wizard_selectedInstallation") || ""
+      : "";
+    const status = typeof window !== "undefined"
+      ? sessionStorage.getItem("wizard_selectedStatus") || "ok"
+      : "ok";
+
+    await addInspection({
+      installationId,
+      status,
+      measurements: { batteryPct: 72, temperatureC: 28 },
+      notes,
+      tags: selectedTags,
+    });
+
     setShowSaveModal(true);
   };
 

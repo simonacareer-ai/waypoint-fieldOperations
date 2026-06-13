@@ -51,7 +51,7 @@ export function StickyFooter({
         {showBack ? (
           <Button
             variant="outline"
-            className="h-14 px-6 text-base font-semibold"
+            className="h-14 px-6 text-base font-semibold cursor-pointer"
             onClick={onBack}
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
@@ -62,7 +62,7 @@ export function StickyFooter({
         )}
         {showNext && (
           <Button
-            className="h-14 px-8 text-base font-semibold"
+            className="h-14 px-8 text-base font-semibold cursor-pointer"
             onClick={onNext}
             disabled={disabled}
           >
@@ -72,7 +72,7 @@ export function StickyFooter({
         )}
         {showSave && (
           <Button
-            className="h-14 px-8 text-base font-semibold bg-success-500 hover:bg-success-700 text-white"
+            className="h-14 px-8 text-base font-semibold bg-success-500 hover:bg-success-700 text-white cursor-pointer"
             onClick={onSave}
             disabled={disabled}
           >

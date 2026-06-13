@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   ClipboardList,
-  History,
   MapPin,
   Plus,
   Settings,
