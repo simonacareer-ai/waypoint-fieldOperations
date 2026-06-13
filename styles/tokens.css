@@ -1,0 +1,251 @@
+/**
+ * ==========================================================
+ * WAYPOINT FIELD OPERATIONS — DESIGN TOKENS
+ * ==========================================================
+ *
+ * Single source of truth for all visual tokens.
+ * Components reference these variables; theme switching
+ * swaps values here — no per-component overrides needed.
+ *
+ * TOKEN CATEGORIES:
+ *   1. Color (brand, surface, text, border, semantic status)
+ *   2. Spacing (4px base scale)
+ *   3. Typography (size, weight, line-height)
+ *   4. Radius
+ *   5. Shadows
+ *   6. Sizing (controls, touch targets)
+ *   7. Breakpoints (reference only — applied in Tailwind config)
+ */
+
+/* ==========================================================
+   1. COLOR TOKENS
+   ========================================================== */
+
+:root {
+  /* --- Brand --- */
+  --token-brand-navy-900: #0F172A;
+  --token-brand-navy-800: #13203A;
+  --token-brand-blue-600: #2563EB;
+  --token-brand-blue-500: #3B82F6;
+  --token-brand-green-600: #16A34A;
+
+  /* --- Surface --- */
+  --token-surface-app: #F8FAFC;
+  --token-surface-primary: #FFFFFF;
+  --token-surface-secondary: #F1F5F9;
+  --token-surface-tertiary: #E2E8F0;
+
+  /* --- Text --- */
+  --token-text-primary: #0F172A;
+  --token-text-secondary: #475569;
+  --token-text-muted: #64748B;
+  --token-text-inverse: #FFFFFF;
+
+  /* --- Border --- */
+  --token-border-default: #E2E8F0;
+  --token-border-strong: #CBD5E1;
+
+  /* --- Semantic: Success --- */
+  --token-success-50: #ECFDF5;
+  --token-success-500: #22C55E;
+  --token-success-700: #15803D;
+
+  /* --- Semantic: Warning --- */
+  --token-warning-50: #FFFBEB;
+  --token-warning-500: #F59E0B;
+  --token-warning-700: #B45309;
+
+  /* --- Semantic: Critical --- */
+  --token-critical-50: #FEF2F2;
+  --token-critical-500: #EF4444;
+  --token-critical-700: #B91C1C;
+
+  /* --- Semantic: Info --- */
+  --token-info-50: #EFF6FF;
+  --token-info-500: #3B82F6;
+  --token-info-700: #1D4ED8;
+
+  /* --- Neutral --- */
+  --token-neutral-100: #F1F5F9;
+  --token-neutral-400: #94A3B8;
+  --token-neutral-700: #334155;
+}
+
+.dark {
+  /* --- Surface (dark) --- */
+  --token-surface-app: #0B1220;
+  --token-surface-primary: #111827;
+  --token-surface-secondary: #172033;
+  --token-surface-tertiary: #1E293B;
+
+  /* --- Text (dark) --- */
+  --token-text-primary: #F8FAFC;
+  --token-text-secondary: #CBD5E1;
+  --token-text-muted: #94A3B8;
+  --token-text-inverse: #0B1220;
+
+  /* --- Border (dark) --- */
+  --token-border-default: #2B3548;
+  --token-border-strong: #374151;
+
+  /* --- Semantic (dark): adjusted bg for dark chips --- */
+  --token-success-50: #052e16;
+  --token-success-500: #22C55E;
+  --token-success-700: #4ade80;
+  --token-warning-50: #451a03;
+  --token-warning-500: #F59E0B;
+  --token-warning-700: #fbbf24;
+  --token-critical-50: #450a0a;
+  --token-critical-500: #F87171;
+  --token-critical-700: #fca5a5;
+  --token-info-50: #172554;
+  --token-info-500: #60A5FA;
+  --token-info-700: #93c5fd;
+
+  /* --- Neutral (dark) --- */
+  --token-neutral-100: #1E293B;
+  --token-neutral-400: #94A3B8;
+  --token-neutral-700: #CBD5E1;
+
+  /* --- Brand (dark) --- */
+  --token-brand-blue-600: #60A5FA;
+  --token-brand-blue-500: #93C5FD;
+}
+
+/* ==========================================================
+   2. SPACING TOKENS (4px base)
+   ========================================================== */
+
+:root {
+  --token-space-1: 4px;
+  --token-space-2: 8px;
+  --token-space-3: 12px;
+  --token-space-4: 16px;
+  --token-space-5: 20px;
+  --token-space-6: 24px;
+  --token-space-8: 32px;
+  --token-space-10: 40px;
+  --token-space-12: 48px;
+  --token-space-16: 64px;
+  --token-space-20: 80px;
+  --token-space-24: 96px;
+}
+
+/* ==========================================================
+   3. TYPOGRAPHY TOKENS
+   ========================================================== */
+
+:root {
+  --token-font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  --token-font-mono: var(--font-geist-mono, 'JetBrains Mono', monospace);
+
+  /* Size / Line-height pairs */
+  --token-type-display-size: 36px;
+  --token-type-display-lh: 44px;
+  --token-type-display-weight: 700;
+
+  --token-type-page-title-size: 28px;
+  --token-type-page-title-lh: 34px;
+  --token-type-page-title-weight: 700;
+
+  --token-type-section-title-size: 20px;
+  --token-type-section-title-lh: 28px;
+  --token-type-section-title-weight: 600;
+
+  --token-type-card-title-size: 18px;
+  --token-type-card-title-lh: 24px;
+  --token-type-card-title-weight: 600;
+
+  --token-type-body-size: 16px;
+  --token-type-body-lh: 24px;
+  --token-type-body-weight: 400;
+
+  --token-type-body-strong-size: 16px;
+  --token-type-body-strong-lh: 24px;
+  --token-type-body-strong-weight: 500;
+
+  --token-type-small-size: 14px;
+  --token-type-small-lh: 20px;
+  --token-type-small-weight: 400;
+
+  --token-type-small-strong-size: 14px;
+  --token-type-small-strong-lh: 20px;
+  --token-type-small-strong-weight: 500;
+
+  --token-type-caption-size: 12px;
+  --token-type-caption-lh: 18px;
+  --token-type-caption-weight: 400;
+
+  --token-type-metric-xl-size: 32px;
+  --token-type-metric-xl-lh: 36px;
+  --token-type-metric-xl-weight: 700;
+
+  --token-type-metric-lg-size: 24px;
+  --token-type-metric-lg-lh: 28px;
+  --token-type-metric-lg-weight: 700;
+}
+
+/* ==========================================================
+   4. RADIUS TOKENS
+   ========================================================== */
+
+:root {
+  --token-radius-xs: 8px;
+  --token-radius-sm: 10px;
+  --token-radius-md: 12px;
+  --token-radius-lg: 16px;
+  --token-radius-xl: 20px;
+  --token-radius-pill: 999px;
+}
+
+/* ==========================================================
+   5. SHADOW TOKENS
+   ========================================================== */
+
+:root {
+  --token-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --token-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --token-shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.10);
+}
+
+.dark {
+  --token-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.20);
+  --token-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30);
+  --token-shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.40);
+}
+
+/* ==========================================================
+   6. SIZING TOKENS (controls + touch targets)
+   ========================================================== */
+
+:root {
+  --token-input-min-height: 48px;
+  --token-dropdown-min-height: 48px;
+  --token-datepicker-min-height: 48px;
+  --token-button-min-height: 56px;
+  --token-icon-button-min-size: 56px;
+  --token-min-tap-target: 48px;
+  --token-wizard-button-size: 64px;
+}
+
+/* ==========================================================
+   7. BREAKPOINTS (reference — applied in tailwind.config)
+   ========================================================== */
+
+/*
+  Mobile:  390px base   (default)
+  Tablet:  768px (md)   — portrait
+  Tablet:  1024px (lg)  — landscape
+  Desktop: 1280px (xl)  — primary desktop
+  Wide:    1440px (2xl) — rich density
+*/
+
+/* ==========================================================
+   8. GRID TOKENS (reference)
+   ========================================================== */
+
+/*
+  Mobile:   4 cols, 16px margin, 12px gutter
+  Tablet:  12 cols, 24px margin, 16px gutter
+  Desktop: 12 cols, 32px margin, 24px gutter
+*/

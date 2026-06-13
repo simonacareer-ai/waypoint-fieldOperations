@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  technician
+  supervisor
+  admin
+}
+
+enum InstallationType {
+  wind_turbine
+  weather_station
+  solar_array
+  other
+}
+
+enum StatusLevel {
+  ok
+  attention
+  critical
+  offline
+}
+
+enum SyncState {
+  local_only
+  pending
+  syncing
+  synced
+  failed
+  conflict
+}
+
+enum QueueAction {
+  create
+  update
+  delete
+  upload
+}
+
+enum QueueEntityType {
+  inspectionDraft
+  inspection
+  attachment
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String?
+  role         Role      @default(technician)
+  avatarUrl    String?
+  workspaceId  String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workspace     Workspace?        @relation(fields: [workspaceId], references: [id])
+  inspections   Inspection[]
+  drafts        InspectionDraft[]
+  settings      Settings?
+  notifications Notification[]
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  region      String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users         User[]
+  installations Installation[]
+  drafts        InspectionDraft[]
+  inspections   Inspection[]
+}
+
+model Installation {
+  id              String           @id @default(cuid())
+  workspaceId     String
+  assetId         String           @unique
+  name            String
+  type            InstallationType
+  siteName        String
+  status          StatusLevel
+  batteryPct      Float?
+  temperatureC    Float?
+  signalStrength  String?
+  vibrationMmS    Float?
+  imageUrl        String?
+  commissionedAt  DateTime?
+  lastInspectedAt DateTime?
+  tags            String[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id])
+  drafts      InspectionDraft[]
+  inspections Inspection[]
+}
+
+model InspectionDraft {
+  id             String       @id @default(cuid())
+  workspaceId    String
+  installationId String?
+  inspectorId    String?
+  step           String
+  status         StatusLevel?
+  measurements   Json
+  notes          String?
+  tags           String[]
+  syncState      SyncState    @default(local_only)
+  lastSavedAt    DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id])
+  installation Installation? @relation(fields: [installationId], references: [id])
+  inspector    User?         @relation(fields: [inspectorId], references: [id])
+  attachments  Attachment[]
+}
+
+model Inspection {
+  id             String      @id @default(cuid())
+  workspaceId    String
+  installationId String
+  inspectorId    String
+  status         StatusLevel
+  measurements   Json
+  notes          String?
+  tags           String[]
+  inspectedAt    DateTime
+  syncState      SyncState   @default(pending)
+  sourceDraftId  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id])
+  installation Installation @relation(fields: [installationId], references: [id])
+  inspector    User         @relation(fields: [inspectorId], references: [id])
+  attachments  Attachment[]
+}
+
+model Attachment {
+  id           String    @id @default(cuid())
+  draftId      String?
+  inspectionId String?
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  localUrl     String?
+  remoteUrl    String?
+  syncState    SyncState @default(local_only)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  draft      InspectionDraft? @relation(fields: [draftId], references: [id])
+  inspection Inspection?      @relation(fields: [inspectionId], references: [id])
+}
+
+model SyncQueueItem {
+  id         String          @id @default(cuid())
+  entityType QueueEntityType
+  entityId   String
+  action     QueueAction
+  status     SyncState       @default(pending)
+  retryCount Int             @default(0)
+  nextRetryAt DateTime?
+  lastError  String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+model Settings {
+  id                   String  @id @default(cuid())
+  userId               String  @unique
+  themeMode            String  @default("light")
+  autoSync             Boolean @default(true)
+  syncOnWifiOnly       Boolean @default(false)
+  notificationsEnabled Boolean @default(true)
+  reducedMotion        Boolean @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
