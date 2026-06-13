@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   X,
   GitMerge,
+  Eye,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +71,7 @@ export function ConflictPanel() {
   const [resolution, setResolution] = useState<Resolution | null>(null);
   const [fieldResolutions, setFieldResolutions] = useState<FieldResolution>({});
   const [resolved, setResolved] = useState(false);
+  const [showMergePreview, setShowMergePreview] = useState(false);
 
   const handleFieldChoice = (field: string, choice: "local" | "server") => {
     setFieldResolutions((prev) => ({ ...prev, [field]: choice }));
@@ -188,7 +191,7 @@ export function ConflictPanel() {
       </div>
 
       {/* Field-by-field comparison */}
-      {resolution === "merge" && (
+      {resolution === "merge" && !showMergePreview && (
         <div className="px-5 py-4 border-b border-border">
           <p className="text-sm font-medium text-foreground mb-3">
             Select which version to keep for each field:
@@ -257,6 +260,44 @@ export function ConflictPanel() {
         </div>
       )}
 
+      {/* Merged result preview */}
+      {resolution === "merge" && showMergePreview && (
+        <div className="px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Eye className="h-4 w-4 text-success-600" />
+            <p className="text-sm font-semibold text-foreground">Merged Result Preview</p>
+            <span className="text-[10px] text-muted-foreground ml-1">
+              — Verify before confirming
+            </span>
+          </div>
+          <div className="rounded-xl border-2 border-success-500/20 bg-success-50/30 dark:bg-success-950/10 overflow-hidden">
+            <div className="divide-y divide-success-500/10">
+              {conflict.fields.map((field) => {
+                const source = fieldResolutions[field.field];
+                const value = source === "local" ? field.localValue : field.serverValue;
+                return (
+                  <div key={field.field} className="flex items-start gap-4 px-4 py-3">
+                    <span className="text-xs font-medium text-muted-foreground w-24 shrink-0 pt-0.5">
+                      {field.label}
+                    </span>
+                    <p className="text-sm font-medium text-foreground flex-1">{value}</p>
+                    {source === "local" ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                        <Smartphone className="h-3 w-3" /> Local
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-info-700 bg-info-500/10 px-2 py-0.5 rounded-full shrink-0">
+                        <Cloud className="h-3 w-3" /> Server
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Comparison preview for keep-local / keep-server */}
       {(resolution === "keep-local" || resolution === "keep-server") && (
         <div className="px-5 py-4 border-b border-border">
@@ -285,19 +326,52 @@ export function ConflictPanel() {
 
       {/* Actions */}
       <div className="px-5 py-4 flex items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          {!resolution && "Select a resolution strategy above."}
-          {resolution === "merge" && !allFieldsResolved && "Pick a version for each field to continue."}
-          {allFieldsResolved && "Ready to resolve this conflict."}
-        </p>
-        <Button
-          disabled={!allFieldsResolved}
-          onClick={handleResolve}
-          className="cursor-pointer"
-        >
-          Resolve Conflict
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
+        {showMergePreview ? (
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setShowMergePreview(false)}
+              className="cursor-pointer"
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit Selections
+            </Button>
+            <Button
+              onClick={handleResolve}
+              className="cursor-pointer"
+            >
+              Confirm & Resolve
+              <CheckCircle2 className="h-4 w-4 ml-2" />
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground">
+              {!resolution && "Select a resolution strategy above."}
+              {resolution === "merge" && !allFieldsResolved && "Pick a version for each field to continue."}
+              {resolution === "merge" && allFieldsResolved && "All fields selected. Preview the merged result."}
+              {(resolution === "keep-local" || resolution === "keep-server") && allFieldsResolved && "Ready to resolve this conflict."}
+            </p>
+            {resolution === "merge" && allFieldsResolved ? (
+              <Button
+                onClick={() => setShowMergePreview(true)}
+                className="cursor-pointer"
+              >
+                Preview Result
+                <Eye className="h-4 w-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                disabled={!allFieldsResolved}
+                onClick={handleResolve}
+                className="cursor-pointer"
+              >
+                Resolve Conflict
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

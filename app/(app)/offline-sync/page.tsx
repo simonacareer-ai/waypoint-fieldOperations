@@ -24,6 +24,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { ConflictPanel } from "@/components/offline-sync/conflict-panel";
 
 interface SyncItem {
   id: string;
@@ -246,8 +247,8 @@ export default function OfflineSyncPage() {
 
           {/* Needs Attention */}
           {failedItems.length > 0 && (
-            <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20">
-              <CardContent className="p-5">
+            <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 pb-0">
+              <CardContent className="p-5 pb-0">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle className="h-5 w-5 text-red-500" />
                   <h3 className="text-base font-semibold text-foreground">Needs attention</h3>
@@ -278,7 +279,7 @@ export default function OfflineSyncPage() {
                     );
                   })}
                 </div>
-                <button className="flex items-center gap-1 text-xs text-primary font-medium mt-4 cursor-pointer hover:underline">
+                <button className="flex items-center gap-1 text-xs text-primary font-medium mt-1 cursor-pointer hover:underline">
                   View all failed items <ChevronRight className="h-3 w-3" />
                 </button>
               </CardContent>
@@ -351,6 +352,16 @@ export default function OfflineSyncPage() {
           </Card>
         </div>
       </div>
+
+      {/* Conflict Resolution */}
+      <section aria-labelledby="conflict-heading">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="h-5 w-5 text-orange-500" />
+          <h2 id="conflict-heading" className="text-base font-semibold text-foreground">Sync Conflicts (1)</h2>
+          <span className="text-xs text-muted-foreground">Resolve before next sync</span>
+        </div>
+        <ConflictPanel />
+      </section>
 
       {/* Footer status bar */}
       <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-muted/50 border border-border">
