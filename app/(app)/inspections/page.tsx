@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { INSPECTIONS_DATA, INSTALLATIONS_DATA } from "@/lib/seed-data";
+import { EmptyState } from "@/components/states/empty-state";
 
 const STATUS_CONFIG = {
   ok: { label: "OK", dotClass: "bg-green-500", textClass: "text-green-700 dark:text-green-400", bgClass: "bg-green-50 dark:bg-green-950/40", borderClass: "border-green-200 dark:border-green-800" },
@@ -418,7 +419,17 @@ export default function InspectionsPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((insp) => {
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-0">
+                    <EmptyState
+                      icon={<Search className="h-8 w-8 text-muted-foreground" />}
+                      title="No inspections found"
+                      description="Try adjusting your search or filters to find what you're looking for."
+                    />
+                  </td>
+                </tr>
+              ) : paginatedData.map((insp) => {
                 const statusCfg = STATUS_CONFIG[insp.status];
                 const syncCfg = SYNC_CONFIG[insp.syncState];
 

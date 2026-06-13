@@ -44,6 +44,9 @@ import {
   Zap,
 } from "lucide-react";
 import { INSTALLATIONS_DATA } from "@/lib/seed-data";
+import { DeleteConfirmModal } from "@/components/states/delete-confirm-modal";
+import { UndoSnackbar } from "@/components/states/undo-snackbar";
+import { EmptyState } from "@/components/states/empty-state";
 
 type EventType =
   | "inspection_completed"
@@ -258,6 +261,10 @@ export default function HistoryPage() {
   const [dateFrom, setDateFrom] = useState("2026-01-01");
   const [dateTo, setDateTo] = useState("2026-01-12");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState(HISTORY_DATA);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deletedEntry, setDeletedEntry] = useState<HistoryEntry | null>(null);
+  const [showUndo, setShowUndo] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLDivElement>(null);
   const addFilterRef = useRef<HTMLDivElement>(null);
@@ -299,7 +306,7 @@ export default function HistoryPage() {
   }, [showAddFilter]);
 
   const filtered = useMemo(() => {
-    let result = HISTORY_DATA.filter((entry) => {
+    let result = historyEntries.filter((entry) => {
       const matchesSearch =
         entry.installationName.toLowerCase().includes(search.toLowerCase()) ||
         entry.assetId.toLowerCase().includes(search.toLowerCase()) ||
@@ -319,7 +326,7 @@ export default function HistoryPage() {
     });
 
     return result;
-  }, [search, statusFilter, installationFilter, sortDir, dateFrom, dateTo]);
+  }, [search, statusFilter, installationFilter, sortDir, dateFrom, dateTo, historyEntries]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -336,6 +343,7 @@ export default function HistoryPage() {
   }
 
   return (
+    <>
     <div className="space-y-0 max-w-[1400px]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -541,7 +549,17 @@ export default function HistoryPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((entry) => {
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-0">
+                    <EmptyState
+                      icon={<Search className="h-8 w-8 text-muted-foreground" />}
+                      title="No records found"
+                      description="Try adjusting your search, filters, or date range."
+                    />
+                  </td>
+                </tr>
+              ) : paginatedData.map((entry) => {
                 const statusCfg = STATUS_CONFIG[entry.status];
                 const syncCfg = SYNC_CONFIG[entry.syncState];
                 const TypeIcon = TYPE_ICONS[entry.installationType] || Fan;
@@ -669,7 +687,7 @@ export default function HistoryPage() {
                             <div className="my-1 border-t border-border" />
                             <button
                               className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
-                              onClick={() => setOpenMenuId(null)}
+                              onClick={() => { setDeleteTarget(entry.id); setOpenMenuId(null); }}
                             >
                               <Trash2 className="h-4 w-4" />
                               Delete Record
@@ -751,5 +769,37 @@ export default function HistoryPage() {
         </div>
       </div>
     </div>
+
+      <DeleteConfirmModal
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Record"
+        description="This action will remove the history record. You can undo this action within 5 seconds."
+        onConfirm={() => {
+          if (deleteTarget) {
+            const entry = historyEntries.find((e) => e.id === deleteTarget);
+            if (entry) {
+              setDeletedEntry(entry);
+              setHistoryEntries((prev) => prev.filter((e) => e.id !== deleteTarget));
+              setShowUndo(true);
+            }
+            setDeleteTarget(null);
+          }
+        }}
+      />
+
+      <UndoSnackbar
+        message="Record deleted"
+        visible={showUndo}
+        onUndo={() => {
+          if (deletedEntry) {
+            setHistoryEntries((prev) => [...prev, deletedEntry].sort((a, b) => b.date.localeCompare(a.date)));
+            setDeletedEntry(null);
+          }
+          setShowUndo(false);
+        }}
+        onDismiss={() => { setShowUndo(false); setDeletedEntry(null); }}
+      />
+    </>
   );
 }

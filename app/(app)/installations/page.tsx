@@ -22,6 +22,7 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 import { INSTALLATIONS_DATA, getInstallationCounts } from "@/lib/seed-data";
+import { EmptyState } from "@/components/states/empty-state";
 
 const TYPE_ICONS: Record<string, typeof Fan> = {
   "wind-turbine": Fan,
@@ -191,6 +192,18 @@ export default function InstallationsPage() {
       </div>
 
       {/* Table */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={<Search className="h-8 w-8 text-muted-foreground" />}
+          title="No installations found"
+          description="Try adjusting your search terms or clearing filters to see results."
+          action={
+            <Button variant="outline" className="cursor-pointer" onClick={() => setSearch("")}>
+              Clear search
+            </Button>
+          }
+        />
+      ) : (
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -318,6 +331,7 @@ export default function InstallationsPage() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
