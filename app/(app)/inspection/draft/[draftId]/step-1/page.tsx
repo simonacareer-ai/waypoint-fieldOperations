@@ -212,7 +212,7 @@ export default function Step1Page() {
       </div>
 
       {/* Sticky Footer */}
-      <div className="fixed bottom-[84px] md:bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm px-4 md:px-6 py-4">
+      <div className="fixed bottom-[65px] md:bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm px-4 md:px-6 py-4">
         <div className="max-w-[900px] mx-auto flex flex-col sm:flex-row items-center justify-end gap-3 sm:gap-5">
           {selected && (
             <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export default function Step1Page() {
             </div>
           )}
           <Button
-            className="h-14 px-6 text-sm font-semibold"
+            className="h-14 px-6 text-sm font-semibold cursor-pointer w-full sm:w-auto"
             onClick={() => router.push(`/inspection/draft/${params.draftId}/step-2`)}
             disabled={!selected}
           >
