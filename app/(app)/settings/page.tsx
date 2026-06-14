@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,13 @@ import { Sun, Moon, Cloud, Bell, Accessibility } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const resolvedTheme = mounted ? theme : "light";
   const [autoSync, setAutoSync] = useState(true);
   const [syncOnWifi, setSyncOnWifi] = useState(false);
   const [notifications, setNotifications] = useState(true);
@@ -27,7 +34,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            {theme === "dark" ? (
+            {resolvedTheme === "dark" ? (
               <Moon className="h-5 w-5 text-muted-foreground" />
             ) : (
               <Sun className="h-5 w-5 text-muted-foreground" />
@@ -40,7 +47,7 @@ export default function SettingsPage() {
             <button
               onClick={() => setTheme("light")}
               className={`flex-1 p-4 rounded-xl border-2 transition-all text-center min-h-[80px] ${
-                theme === "light"
+                resolvedTheme === "light"
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/30"
               }`}
@@ -52,7 +59,7 @@ export default function SettingsPage() {
             <button
               onClick={() => setTheme("dark")}
               className={`flex-1 p-4 rounded-xl border-2 transition-all text-center min-h-[80px] ${
-                theme === "dark"
+                resolvedTheme === "dark"
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/30"
               }`}

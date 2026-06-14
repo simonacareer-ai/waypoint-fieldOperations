@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
+import { getInspectionCounts } from "@/lib/seed-data";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -97,7 +98,7 @@ export function Sidebar() {
         </div>
         <div className="flex items-center justify-center gap-1">
           <Cloud className="h-3 w-3 text-info-500" />
-          <span className="text-[9px] font-medium text-foreground">12 Pending Sync</span>
+          <span className="text-[9px] font-medium text-foreground">{getInspectionCounts().pendingSync} Pending Sync</span>
         </div>
         <p className="text-[9px] text-muted-foreground">Will upload when online</p>
         <div className="space-y-0.5">
@@ -131,7 +132,7 @@ export function Sidebar() {
         <div className="flex items-start gap-2">
           <Cloud className="h-3.5 w-3.5 text-info-500 shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs font-medium text-foreground">12 Pending Sync</p>
+            <p className="text-xs font-medium text-foreground">{getInspectionCounts().pendingSync} Pending Sync</p>
             <p className="text-[10px] text-muted-foreground">Will upload when online</p>
           </div>
         </div>

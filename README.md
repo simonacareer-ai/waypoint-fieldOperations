@@ -2,6 +2,9 @@
 
 An offline-first inspection platform for field technicians working on remote industrial assets (wind turbines, weather stations, generators). Designed for harsh conditions: gloved hands, direct sunlight, intermittent connectivity, and frequent interruptions mid-task.
 
+**Live Demo**: [https://waypoint-field-operations.vercel.app](https://waypoint-field-operations.vercel.app/login) — hosted on Vercel
+**Login**: Use any email (e.g. `tech@waypoint.io`) and any 6+ character password. Authentication is simulated — all credentials are accepted. 
+
 ## Quick Start
 
 ```bash

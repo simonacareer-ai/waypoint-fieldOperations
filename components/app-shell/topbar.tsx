@@ -1,13 +1,35 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Bell, Search, Sun, Moon, CloudUpload, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getInspectionCounts } from "@/lib/seed-data";
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center rounded-xl border border-border overflow-hidden shrink-0">
+        <div className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium h-[48px] text-muted-foreground">
+          <Sun className="h-5 w-5" />
+          Light
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium h-[48px] text-muted-foreground">
+          <Moon className="h-5 w-5" />
+          Dark
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center rounded-xl border border-border overflow-hidden shrink-0">
@@ -16,7 +38,7 @@ function ThemeToggle() {
         className={cn(
           "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all cursor-pointer h-[48px]",
           theme !== "dark"
-            ? "text-primary text-primary border-b-primary border-b-2"
+            ? "text-primary border-b-primary border-b-2"
             : "bg-card text-muted-foreground hover:text-foreground"
         )}
       >
@@ -28,8 +50,8 @@ function ThemeToggle() {
         className={cn(
           "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all cursor-pointer h-[48px]",
           theme === "dark"
-            ? "text-primary text-primary border-b-primary border-b-2"
-            : "bg-card text-muted-foreground hover:text-foreground "
+            ? "text-primary border-b-primary border-b-2"
+            : "bg-card text-muted-foreground hover:text-foreground"
         )}
       >
         <Moon className="h-5 w-5" />
@@ -87,7 +109,7 @@ export function Topbar() {
             </Button>
             <div className="flex items-center gap-1.5 rounded-md border border-info-500/30 bg-info-50 px-2.5 py-1.5 cursor-pointer hover:bg-info-100 transition-colors">
               <CloudUpload className="h-4 w-4 text-info-700" />
-              <span className="text-[11px] font-semibold text-info-700">12 Pending Sync</span>
+              <span className="text-[11px] font-semibold text-info-700">{getInspectionCounts().pendingSync} Pending Sync</span>
             </div>
             <div className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
@@ -120,9 +142,9 @@ export function Topbar() {
                 3
               </span>
             </Button>
-            <div role="status" aria-label="12 items pending sync" className="flex items-center gap-1.5 rounded-md border border-info-500/30 bg-info-50 px-2.5 py-1.5 cursor-pointer hover:bg-info-100 transition-colors h-[42px]">
+            <div role="status" aria-label="Items pending sync" className="flex items-center gap-1.5 rounded-md border border-info-500/30 bg-info-50 px-2.5 py-1.5 cursor-pointer hover:bg-info-100 transition-colors h-[42px]">
               <CloudUpload className="h-5 w-5 text-info-700" />
-              <span className="text-[11px] font-semibold text-info-700">12 Pending Sync</span>
+              <span className="text-[11px] font-semibold text-info-700">{getInspectionCounts().pendingSync} Pending Sync</span>
             </div>
             <div className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
@@ -180,7 +202,7 @@ export function Topbar() {
           </Button>
           <div className="flex items-center gap-1.5 rounded-md border border-info-500/30 bg-info-50 px-3 py-1.5 cursor-pointer hover:bg-info-100 transition-colors h-[48px]">
             <CloudUpload className="h-5 w-5 text-info-700" />
-            <span className="text-xs font-semibold text-info-700">12 Pending Sync</span>
+            <span className="text-xs font-semibold text-info-700">{getInspectionCounts().pendingSync} Pending Sync</span>
           </div>
           <div className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">

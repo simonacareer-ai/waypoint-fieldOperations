@@ -40,7 +40,7 @@ export function StickyFooter({
         className
       )}
     >
-      <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-end gap-3 sm:gap-5">
+      <div className=" mx-auto flex flex-col sm:flex-row items-center justify-end gap-3 sm:gap-5">
         {showSavedStatus && (
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-green-500" />

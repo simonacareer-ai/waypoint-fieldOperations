@@ -1,6 +1,7 @@
 "use client";
 
 import { Cloud, CheckCircle2 } from "lucide-react";
+import { getInspectionCounts } from "@/lib/seed-data";
 
 export function MobileSyncStatus() {
   return (
@@ -12,7 +13,7 @@ export function MobileSyncStatus() {
       <div className="h-4 w-px bg-border" />
       <div className="flex items-center gap-1.5">
         <Cloud className="h-4 w-4 text-info-500" />
-        <span className="text-xs font-medium text-foreground">12 Pending</span>
+        <span className="text-xs font-medium text-foreground">{getInspectionCounts().pendingSync} Pending</span>
       </div>
       <div className="h-4 w-px bg-border" />
       <span className="text-[11px] text-muted-foreground">Last sync: 2h ago</span>

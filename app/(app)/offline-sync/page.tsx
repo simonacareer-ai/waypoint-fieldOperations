@@ -17,7 +17,7 @@ import {
   FileText,
   Image as ImageIcon,
   ClipboardList,
-  MoreHorizontal,
+  MoreVertical,
   ArrowRight,
   ChevronRight,
   HardDrive,
@@ -251,7 +251,7 @@ export default function OfflineSyncPage() {
               <CardContent className="p-5 pb-0">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle className="h-5 w-5 text-red-500" />
-                  <h3 className="text-base font-semibold text-foreground">Needs attention</h3>
+                  <h3 id="failed" className="text-base font-semibold text-foreground">Needs attention</h3>
                   <span className="text-sm text-muted-foreground ml-1">{failedItems.length} items failed to sync</span>
                 </div>
                 <div className="space-y-3">
@@ -267,13 +267,13 @@ export default function OfflineSyncPage() {
                         <span className="text-xs text-muted-foreground">{item.time}</span>
                         <Button
                           variant="outline"
-                          className="h-9 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950/30 cursor-pointer"
+                          className="h-9 px-3 text-xs border-red-300 bg-red-50 text-red-600 hover:bg-red-50/50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950/30 cursor-pointer"
                           onClick={() => handleRetry(item.id)}
                         >
                           Retry
                         </Button>
-                        <button className="p-1.5 hover:bg-accent rounded cursor-pointer">
-                          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                        <button className="p-1.5 hover:bg-accent rounded cursor-pointer items-center justify-center">
+                          <MoreVertical className="h-6 w-6 text-muted-foreground" />
                         </button>
                       </div>
                     );
@@ -354,7 +354,7 @@ export default function OfflineSyncPage() {
       </div>
 
       {/* Conflict Resolution */}
-      <section aria-labelledby="conflict-heading">
+      <section id="conflicts" aria-labelledby="conflict-heading">
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="h-5 w-5 text-orange-500" />
           <h2 id="conflict-heading" className="text-base font-semibold text-foreground">Sync Conflicts (1)</h2>
