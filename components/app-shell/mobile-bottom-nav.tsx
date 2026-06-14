@@ -22,8 +22,10 @@ const MOBILE_NAV = [
 export function MobileBottomNav() {
   const pathname = usePathname();
 
+  const isWizardPage = pathname.startsWith("/inspection/draft/") || pathname === "/inspection/new";
+
   return (
-    <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-card/95 backdrop-blur-sm safe-bottom">
+    <nav aria-label="Mobile navigation" className={cn("fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-card/95 backdrop-blur-sm safe-bottom", isWizardPage && "z-40")}>
       <div className="flex items-center justify-around px-2 py-2">
         {MOBILE_NAV.map((item) => {
           const Icon = item.icon;
@@ -34,6 +36,7 @@ export function MobileBottomNav() {
               pathname.startsWith(item.href));
 
           if (item.isPrimary) {
+            if (isWizardPage) return null;
             return (
               <Link
                 key={item.label}

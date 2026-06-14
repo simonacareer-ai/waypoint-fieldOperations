@@ -82,7 +82,7 @@ export default function Step1Page() {
       const matchesType = typeFilter === "all" || inst.type === typeFilter;
       return matchesSearch && matchesType;
     });
-  }, [search, typeFilter]);
+  }, [search, typeFilter, INSTALLATIONS_DATA]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: INSTALLATIONS_DATA.length };
@@ -90,7 +90,7 @@ export default function Step1Page() {
       counts[inst.type] = (counts[inst.type] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [INSTALLATIONS_DATA]);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visibleCount;
@@ -212,8 +212,8 @@ export default function Step1Page() {
       </div>
 
       {/* Sticky Footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm px-6 py-4">
-        <div className="max-w-[900px] mx-auto flex items-center justify-end gap-5">
+      <div className="fixed bottom-[84px] md:bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm px-4 md:px-6 py-4">
+        <div className="max-w-[900px] mx-auto flex flex-col sm:flex-row items-center justify-end gap-3 sm:gap-5">
           {selected && (
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
