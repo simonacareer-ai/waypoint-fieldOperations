@@ -5,8 +5,8 @@ An offline-first inspection platform for field technicians working on remote ind
 **Live Demo**: [https://waypoint-field-operations.vercel.app](https://waypoint-field-operations.vercel.app/login) — hosted on Vercel
 **Login**: Use any email (e.g. `tech@waypoint.io`) and any 6+ character password. Authentication is simulated — all credentials are accepted. 
 
-** Visual Reference
-**Behance Case Study:
+**Visual Reference:**
+**Behance Case Study:**
 https://www.behance.net/gallery/251164955/Field-Inspection-App-UX-Design
 
 ## Quick Start
