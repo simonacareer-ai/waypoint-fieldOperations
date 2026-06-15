@@ -5,6 +5,10 @@ An offline-first inspection platform for field technicians working on remote ind
 **Live Demo**: [https://waypoint-field-operations.vercel.app](https://waypoint-field-operations.vercel.app/login) — hosted on Vercel
 **Login**: Use any email (e.g. `tech@waypoint.io`) and any 6+ character password. Authentication is simulated — all credentials are accepted. 
 
+## Visual Reference
+Behance Case Study:
+[https://www.behance.net/your-link-here](https://www.behance.net/gallery/251164955/Field-Inspection-App-UX-Design)
+
 ## Quick Start
 
 ```bash
@@ -87,6 +91,6 @@ styles/tokens.css          Design tokens (color, spacing, typography)
 ## Design Decisions
 
 See [DESIGN.md](./DESIGN.md) for:
-- The 2–3 most important UX decisions and rejected alternatives
+- The most important UX decisions and rejected alternatives
 - What was deliberately simplified and why
 - What I would build next with one more week
