@@ -175,7 +175,7 @@ export default function InspectionsPage() {
         </div>
         <div className="flex items-center gap-4">
           <Link href="/inspection/new" className="cursor-pointer  w-full sm:w-auto">
-            <Button className="h-10 px-1 font-semibold text-sm !gap-1.5 cursor-pointer">
+            <Button className="h-10 px-4 font-semibold text-sm !gap-1.5 cursor-pointer">
               <Plus className="h-4 w-4" />
               New Inspection
             </Button>
