@@ -1,5 +1,11 @@
 # DESIGN.md — Waypoint Field Operations
 
+#Live Demo: https://waypoint-field-operations.vercel.app — hosted on Vercel 
+#Login: Use any email (e.g. tech@waypoint.io) and any 6+ character password. Authentication is simulated — all credentials are accepted.
+
+## Visual Reference
+##Behance Case Study: https://www.behance.net/gallery/251164955/Field-Inspection-App-UX-Design
+
 ## Important UX Decisions
 
 ### 1. Offline-first trust through persistent visibility and Always-visible sync trust over notification-based feedback
