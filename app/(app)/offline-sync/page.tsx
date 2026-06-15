@@ -21,7 +21,7 @@ import {
   ArrowRight,
   ChevronRight,
   HardDrive,
-  Upload,
+  CloudUpload,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ConflictPanel } from "@/components/offline-sync/conflict-panel";
@@ -378,7 +378,7 @@ export default function OfflineSyncPage() {
       {/* Auto-sync toggle */}
       <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
         <div className="flex items-center gap-3">
-          <Upload className="h-5 w-5 text-muted-foreground" />
+          <CloudUpload className="h-6 w-6 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium text-foreground">Auto-sync</p>
             <p className="text-xs text-muted-foreground">Automatically sync when connection is available</p>

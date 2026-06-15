@@ -112,11 +112,3 @@ export async function addInspection(data: {
   return id;
 }
 
-export async function cleanupOrphanedInspections(): Promise<number> {
-  const all = await db.inspections.toArray();
-  const orphaned = all.filter((r) => !r.installationId);
-  if (orphaned.length > 0) {
-    await db.inspections.bulkDelete(orphaned.map((r) => r.id));
-  }
-  return orphaned.length;
-}

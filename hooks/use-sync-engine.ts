@@ -7,9 +7,7 @@ import { useSyncStore } from "@/store/sync-store";
 export function useSyncEngine() {
   const { networkOnline } = useAppStore();
   const {
-    setPendingCount,
     setSyncingCount,
-    setFailedCount,
     setLastSyncAt,
     setOverallStatus,
   } = useSyncStore();

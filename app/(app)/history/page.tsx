@@ -12,8 +12,6 @@ import {
   ChevronDown,
   X,
   CheckCircle2,
-  AlertTriangle,
-  Info,
   MoreVertical,
   Plus,
   Eye,
@@ -96,7 +94,6 @@ function generateHistoryData(installationsData: typeof import("@/lib/seed-data")
   if (installationsData.length === 0) return [];
   const entries: HistoryEntry[] = [];
   const statuses: HistoryEntry["status"][] = ["ok", "critical", "attention", "info"];
-  const syncStates: HistoryEntry["syncState"][] = ["synced", "pending", "local", "failed"];
   const detailSets = [
     ["Battery: 14%", "Temp: 32°C", "Alerts: 2"],
     ["All data synced", "Duration: 18m 42s", "Record ID: 8f3c1d2e"],

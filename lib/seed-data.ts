@@ -481,10 +481,3 @@ export function getCriticalAssets() {
   );
 }
 
-export function getRecentInspections(limit = 10) {
-  return INSPECTIONS_DATA.slice(0, limit);
-}
-
-export function getInspectionsByStatus(status: InspectionStatus) {
-  return INSPECTIONS_DATA.filter((insp) => insp.status === status);
-}

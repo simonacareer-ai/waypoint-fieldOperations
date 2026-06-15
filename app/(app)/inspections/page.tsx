@@ -13,7 +13,6 @@ import {
   ArrowUpDown,
   CheckCircle2,
   AlertTriangle,
-  XCircle,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
@@ -75,7 +74,7 @@ const ROWS_PER_PAGE_OPTIONS = [6, 10, 25, 50, 100];
 export default function InspectionsPage() {
   const searchParams = useSearchParams();
   const statusParam = searchParams.get("status");
-  const { inspections: INSPECTIONS_DATA, loading: dbLoading } = useInspections();
+  const { inspections: INSPECTIONS_DATA } = useInspections();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(statusParam || "all");

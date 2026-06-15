@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { FileText, SearchX } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface EmptyStateProps {
   icon?: React.ReactNode;

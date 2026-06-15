@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, CloudUpload, Clock, AlertTriangle, RefreshCw, GitMerge, Wifi, ChevronRight } from "lucide-react";
+import { CheckCircle2, CloudUpload, Clock, AlertTriangle, GitMerge, Wifi, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getInspectionCounts } from "@/lib/seed-data";
 

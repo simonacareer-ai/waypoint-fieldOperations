@@ -10,8 +10,6 @@ import {
   X,
   Eye,
   Pencil,
-  Camera,
-  Image,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
