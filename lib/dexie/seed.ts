@@ -7,6 +7,11 @@ export async function seedDatabase(): Promise<void> {
   if (seedPromise) return seedPromise;
 
   seedPromise = (async () => {
+    const orphaned = await db.inspections.filter((r) => !r.installationId).toArray();
+    if (orphaned.length > 0) {
+      await db.inspections.bulkDelete(orphaned.map((r) => r.id));
+    }
+
     const count = await db.inspections.count();
     if (count > 0) return;
 

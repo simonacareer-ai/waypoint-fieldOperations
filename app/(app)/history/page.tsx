@@ -420,13 +420,13 @@ export default function HistoryPage() {
           <div className="relative" ref={dateRef}>
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
-              className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px]"
+              className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px] w-auto sm:w-full"
             >
               <span className="text-sm">{formatDateLabel(dateFrom)} — {formatDateLabel(dateTo)}</span>
               <ChevronDown className={`h-3.5 w-3.5 ml-auto text-muted-foreground transition-transform ${showDatePicker ? "rotate-180" : ""}`} />
             </button>
             {showDatePicker && (
-              <div className="absolute top-full mt-2 left-0 z-50 bg-card border border-border rounded-lg shadow-lg p-4 space-y-3 w-[280px]">
+              <div className="absolute top-full mt-2 right-0 z-50 bg-card border border-border rounded-lg shadow-lg p-4 space-y-3 w-[280px]">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground">From</label>
                   <input
@@ -531,18 +531,18 @@ export default function HistoryPage() {
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="w-8 px-2 py-2"></th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Asset</th>
                 <th
-                  className="text-left text-xs font-medium text-muted-foreground px-3 py-3 cursor-pointer whitespace-nowrap"
+                  className="text-left text-xs font-medium text-muted-foreground px-3 py-3 cursor-pointer whitespace-nowrap uppercase"
                   onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
                 >
                   Date &amp; Time {sortDir === "desc" ? "↓" : "↑"}
                 </th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Installation</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Event</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Details</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Status</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Sync</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">User</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Event</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Details</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Status</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Sync</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 uppercase">User</th>
                 <th className="w-8 px-3 py-2"></th>
               </tr>
             </thead>
@@ -551,9 +551,25 @@ export default function HistoryPage() {
                 <tr>
                   <td colSpan={9} className="py-0">
                     <EmptyState
-                      icon={<Search className="h-8 w-8 text-muted-foreground" />}
+                      icon={
+                        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                          <Search className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      }
                       title="No records found"
-                      description="Try adjusting your search, filters, or date range."
+                      description={search
+                        ? `No results match "${search}" with the current filters.`
+                        : "No history records match the current filters or date range."
+                      }
+                      action={
+                        <Button
+                          className="h-[48px] px-5 text-sm font-semibold cursor-pointer"
+                          onClick={() => { setSearch(""); }}
+                        >
+                          Clear Filters
+                        </Button>
+                      }
+                      tip="Try searching by installation name, event type, user, or adjust the date range."
                     />
                   </td>
                 </tr>
@@ -574,17 +590,17 @@ export default function HistoryPage() {
                       </div>
                     </td>
 
-                    {/* Date & Time */}
-                    <td className="px-2 py-2 whitespace-nowrap">
-                      <p className="text-xs font-medium text-foreground">{entry.date}</p>
-                      <p className="text-xs text-muted-foreground">{entry.time}</p>
-                    </td>
-
                     {/* Installation */}
                     <td className="px-2 py-2 min-w-[140px]">
                       <p className="text-sm font-semibold text-foreground">{entry.assetId}</p>
                       <p className="text-xs text-muted-foreground">{entry.installationName}</p>
                       <p className="text-xs text-muted-foreground">{entry.location}</p>
+                    </td>
+
+                    {/* Date & Time */}
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      <p className="text-xs font-medium text-foreground">{entry.date}</p>
+                      <p className="text-xs text-muted-foreground">{entry.time}</p>
                     </td>
 
                     {/* Event */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Battery, Thermometer, Activity, Minus, Plus, Info } from "lucide-react";
 import { PageHeader } from "@/components/app-shell/page-header";
@@ -23,6 +23,13 @@ export default function Step3Page() {
   const [temperature, setTemperature] = useState(28);
   const [rotorSpeed, setRotorSpeed] = useState(1720);
   const [vibration, setVibration] = useState(3.2);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const draftId = params.draftId as string;
+    sessionStorage.setItem(`wizard-${draftId}-battery`, String(battery));
+    sessionStorage.setItem(`wizard-${draftId}-temperature`, String(temperature));
+  }, [battery, temperature, params.draftId]);
 
   return (
     <div className="space-y-6 max-w-[900px] pb-24">

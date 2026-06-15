@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Camera, FileText, Tag, Trash2, X, Plus, Battery, Thermometer, Wifi, Activity, Wrench, CheckCircle2 } from "lucide-react";
+import { Camera, FileText, Tag, Trash2, X, Plus, Battery, Thermometer, Wifi, Activity, Wrench, CheckCircle2, CloudUpload } from "lucide-react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { WizardStepper } from "@/components/inspection-wizard/wizard-stepper";
 import { StickyFooter } from "@/components/inspection-wizard/sticky-footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { addInspection } from "@/hooks/use-dexie-data";
+import { addInspection, useInstallations } from "@/hooks/use-dexie-data";
 
 const STEPS = [
   { label: "Installation", description: "Select asset" },
@@ -37,6 +35,28 @@ export default function Step4Page() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
+  const { installations } = useInstallations();
+
+  const [wizardInstallationId, setWizardInstallationId] = useState("");
+  const [wizardStatus, setWizardStatus] = useState("ok");
+  const [wizardBattery, setWizardBattery] = useState(72);
+  const [wizardTemperature, setWizardTemperature] = useState(28);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const draftId = params.draftId as string;
+    const instId = sessionStorage.getItem(`wizard-${draftId}-step1`) || sessionStorage.getItem("wizard_selectedInstallation") || "";
+    const status = sessionStorage.getItem(`wizard-${draftId}-step2`) || sessionStorage.getItem("wizard_selectedStatus") || "ok";
+    const battery = sessionStorage.getItem(`wizard-${draftId}-battery`);
+    const temp = sessionStorage.getItem(`wizard-${draftId}-temperature`);
+    setWizardInstallationId(instId);
+    setWizardStatus(status);
+    if (battery) setWizardBattery(Number(battery));
+    if (temp) setWizardTemperature(Number(temp));
+  }, [params.draftId]);
+
+  const selectedInstallation = installations.find((i) => i.id === wizardInstallationId);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -44,17 +64,10 @@ export default function Step4Page() {
   };
 
   const handleSave = async () => {
-    const installationId = typeof window !== "undefined"
-      ? sessionStorage.getItem("wizard_selectedInstallation") || ""
-      : "";
-    const status = typeof window !== "undefined"
-      ? sessionStorage.getItem("wizard_selectedStatus") || "ok"
-      : "ok";
-
     await addInspection({
-      installationId,
-      status,
-      measurements: { batteryPct: 72, temperatureC: 28 },
+      installationId: wizardInstallationId,
+      status: wizardStatus,
+      measurements: { batteryPct: wizardBattery, temperatureC: wizardTemperature },
       notes,
       tags: selectedTags,
     });
@@ -183,42 +196,32 @@ export default function Step4Page() {
                   <Plus className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Installation</span>
                 </div>
-                <span className="text-sm font-medium text-foreground">Wind Turbine 03</span>
+                <span className="text-sm font-medium text-foreground">{selectedInstallation?.name || "—"}</span>
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-2.5">
                   <Tag className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Status</span>
                 </div>
-                <span className="text-sm font-bold text-red-600 dark:text-red-400 uppercase">Critical</span>
+                <span className={`text-sm font-bold uppercase ${
+                  wizardStatus === "critical" ? "text-red-600 dark:text-red-400"
+                    : wizardStatus === "warning" ? "text-yellow-600 dark:text-yellow-400"
+                    : "text-green-600 dark:text-green-400"
+                }`}>{wizardStatus}</span>
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-2.5">
                   <Battery className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Battery Level</span>
                 </div>
-                <span className="text-sm font-bold text-red-600 dark:text-red-400">14%</span>
+                <span className={`text-sm font-bold ${wizardBattery < 30 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>{wizardBattery}%</span>
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-2.5">
                   <Thermometer className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Temperature</span>
                 </div>
-                <span className="text-sm font-bold text-orange-600 dark:text-orange-400">42°C</span>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-2.5">
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Rotor Speed</span>
-                </div>
-                <span className="text-sm font-bold text-foreground">1820 RPM</span>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-2.5">
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Vibration</span>
-                </div>
-                <span className="text-sm font-bold text-foreground">2.1 mm/s</span>
+                <span className={`text-sm font-bold ${wizardTemperature > 35 ? "text-orange-600 dark:text-orange-400" : "text-foreground"}`}>{wizardTemperature}°C</span>
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-2.5">
@@ -240,56 +243,124 @@ export default function Step4Page() {
         onSave={handleSave}
       />
 
-      {/* Save Success Modal */}
+      {/* Save Success Popup */}
       {showSaveModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSaveModal(false)} />
-          <div className="relative bg-card border border-border rounded-2xl shadow-2xl max-w-[700px] w-[90%] p-0 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              {/* Left - Success */}
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <div className="h-16 w-16 rounded-full bg-green-600 flex items-center justify-center mb-5">
-                  <CheckCircle2 className="h-9 w-9 text-white" />
+          <div className="relative bg-card border border-border rounded-2xl shadow-2xl max-w-[640px] w-[92%] max-h-[90vh] overflow-y-auto">
+            <div className="flex flex-col items-center text-center p-6 md:p-8">
+              {/* Green checkmark */}
+              <div className="h-18 w-18 rounded-full bg-green-600 flex items-center justify-center mb-4 shadow-lg shadow-green-600/20">
+                <CheckCircle2 className="h-10 w-10 text-white" />
+              </div>
+
+              <h2 className="text-xl font-bold text-foreground">Inspection Saved!</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedInstallation?.name || "Installation"} — {wizardStatus.charAt(0).toUpperCase() + wizardStatus.slice(1)} status recorded
+              </p>
+
+              {/* Summary Card */}
+              <div className="w-full mt-5 bg-muted/30 border border-border rounded-xl overflow-hidden text-left">
+                <div className="grid grid-cols-[1fr_auto] items-center px-4 py-3 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Activity className="h-4.5 w-4.5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{selectedInstallation?.name || "Unknown Installation"}</p>
+                      <p className="text-xs text-muted-foreground">{selectedInstallation?.location || "—"}</p>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
+                    wizardStatus === "critical"
+                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      : wizardStatus === "warning"
+                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                  }`}>
+                    {wizardStatus}
+                  </span>
                 </div>
-                <h2 className="text-xl font-bold text-foreground">Inspection Saved!</h2>
-                <p className="text-sm font-medium text-foreground mt-2">WT-03 Wind Turbine 03</p>
-                <p className="text-xs text-muted-foreground mt-1">Your inspection has been saved locally.</p>
-                <div className="flex items-center gap-3 mt-6 w-full flex-col">
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-11 text-sm font-medium cursor-pointer min-w-[220px]"
-                    onClick={() => router.push(`/inspections`)}
-                  >
-                    View Inspection Summary
-                  </Button>
-                  <Button
-                    className="flex-1 h-11 text-sm font-medium cursor-pointer min-w-[220px]"
-                    onClick={() => router.push(`/inspection/new`)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    New Inspection
-                  </Button>
+
+                <div className="grid grid-cols-2 border-b border-border">
+                  <div className="px-4 py-2.5 border-r border-border">
+                    <p className="text-xs text-muted-foreground">Battery</p>
+                    <p className={`text-sm font-bold ${wizardBattery < 30 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>{wizardBattery}%</p>
+                  </div>
+                  <div className="px-4 py-2.5">
+                    <p className="text-xs text-muted-foreground">Temperature</p>
+                    <p className={`text-sm font-bold ${wizardTemperature > 35 ? "text-orange-600 dark:text-orange-400" : "text-foreground"}`}>{wizardTemperature}°C</p>
+                  </div>
+                </div>
+
+                <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground mr-0.5">Tags</span>
+                  {selectedTags.slice(0, 3).map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-medium border border-border bg-card text-foreground capitalize">
+                      {tag.replace("-", " ")}
+                    </span>
+                  ))}
+                  {selectedTags.length > 3 && (
+                    <span className="text-xs text-muted-foreground">+{selectedTags.length - 3}</span>
+                  )}
+                </div>
+
+                {notes && (
+                  <div className="px-4 py-2.5 border-b border-border">
+                    <p className="text-xs text-muted-foreground line-clamp-1">{notes}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 px-4 py-2.5">
+                  <p className="text-xs text-muted-foreground">Inspector: <span className="text-sm text-foreground font-medium">Simona D.</span></p>
+                  <p className="text-xs text-muted-foreground text-right">Timestamp: <span className="text-sm text-foreground font-medium">Today at {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></p>
                 </div>
               </div>
 
-              {/* Right - What's Next */}
-              <div className="bg-muted/30 border-l border-border p-8">
-                <h3 className="text-base font-bold text-foreground mb-4">What&apos;s Next?</h3>
-                <ul className="space-y-4">
-                  <li>
-                    <p className="text-sm font-semibold text-foreground">Sync when online</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Your inspection will sync to the cloud when connection is available.</p>
-                  </li>
-                  <li>
-                    <p className="text-sm font-semibold text-foreground">Continue inspections</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Start a new inspection or view history.</p>
-                  </li>
-                  <li>
-                    <p className="text-sm font-semibold text-foreground">Stay safe</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Thank you for keeping our assets operating at their best.</p>
-                  </li>
-                </ul>
+              {/* Saved Locally - green with sync progress */}
+              <div className="w-full mt-5 space-y-2">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <span className="text-sm font-medium text-green-700 dark:text-green-300">Saved Locally</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <CloudUpload className="h-6 w-6 animate-pulse text-primary" />
+                  <span className="text-sm">Syncing to cloud...</span>
+                  <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full w-2/3 bg-primary rounded-full animate-[pulse_2s_ease-in-out_infinite]" />
+                  </div>
+                </div>
               </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-6 w-full">
+                <Button
+                  className="h-[48px] px-5 text-sm font-semibold cursor-pointer"
+                  onClick={() => router.push(`/inspection/new`)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Start Another Inspection
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-[48px] px-5 text-sm font-semibold cursor-pointer"
+                  onClick={() => router.push(`/history`)}
+                >
+                  View in History
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-[48px] px-5 text-sm font-semibold cursor-pointer"
+                  onClick={() => router.push(`/dashboard`)}
+                >
+                  Back to Dashboard
+                </Button>
+              </div>
+
+              {/* Confirmation text */}
+              <p className="mt-4 text-md text-green-600 dark:text-green-400">
+                Draft cleared. Your inspection is safely stored.
+              </p>
             </div>
           </div>
         </div>

@@ -54,30 +54,32 @@ export function useInspections() {
     [seeded]
   );
 
-  const inspections: Inspection[] = (raw ?? []).map((r) => {
-    const inst = (installationsRaw ?? []).find((i) => i.id === r.installationId);
-    return {
-      id: r.id,
-      installationId: r.installationId,
-      installation: inst?.name ?? "Unknown",
-      assetId: inst?.assetId ?? "",
-      location: inst?.siteName ?? "",
-      status: r.status as Inspection["status"],
-      syncState: r.syncState as Inspection["syncState"],
-      inspector: r.inspectorId,
-      inspectorRole: "",
-      date: r.inspectedAt.split("T")[0],
-      time: r.inspectedAt.split("T")[1] ?? "00:00",
-      notes: r.notes ?? "",
-      duration: 0,
-      fieldsCompleted: 4,
-      totalFields: 4,
-      batteryPct: (r.measurements as Record<string, number>)?.batteryPct ?? 0,
-      temperatureC: (r.measurements as Record<string, number>)?.temperatureC ?? null,
-      tags: r.tags ?? [],
-      isDraft: false,
-    };
-  });
+  const inspections: Inspection[] = (raw ?? [])
+    .filter((r) => r.installationId)
+    .map((r) => {
+      const inst = (installationsRaw ?? []).find((i) => i.id === r.installationId);
+      return {
+        id: r.id,
+        installationId: r.installationId,
+        installation: inst?.name ?? "Unknown",
+        assetId: inst?.assetId ?? "",
+        location: inst?.siteName ?? "",
+        status: r.status as Inspection["status"],
+        syncState: r.syncState as Inspection["syncState"],
+        inspector: r.inspectorId,
+        inspectorRole: "",
+        date: r.inspectedAt.split("T")[0],
+        time: r.inspectedAt.split("T")[1] ?? "00:00",
+        notes: r.notes ?? "",
+        duration: 0,
+        fieldsCompleted: 4,
+        totalFields: 4,
+        batteryPct: (r.measurements as Record<string, number>)?.batteryPct ?? 0,
+        temperatureC: (r.measurements as Record<string, number>)?.temperatureC ?? null,
+        tags: r.tags ?? [],
+        isDraft: false,
+      };
+    });
 
   return { inspections, loading: !seeded || raw === undefined };
 }
@@ -89,6 +91,9 @@ export async function addInspection(data: {
   notes: string;
   tags: string[];
 }): Promise<string> {
+  if (!data.installationId) {
+    throw new Error("Cannot save inspection without a selected installation.");
+  }
   const id = `insp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   await db.inspections.add({
     id,
@@ -105,4 +110,13 @@ export async function addInspection(data: {
     updatedAt: new Date().toISOString(),
   });
   return id;
+}
+
+export async function cleanupOrphanedInspections(): Promise<number> {
+  const all = await db.inspections.toArray();
+  const orphaned = all.filter((r) => !r.installationId);
+  if (orphaned.length > 0) {
+    await db.inspections.bulkDelete(orphaned.map((r) => r.id));
+  }
+  return orphaned.length;
 }

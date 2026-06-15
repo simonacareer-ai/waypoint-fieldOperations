@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,11 @@ import {
   Flag,
   CloudUpload,
   X,
+  Fan,
+  CloudSun,
+  Zap,
+  Cpu,
+  CalendarDays,
 } from "lucide-react";
 import { INSTALLATIONS_DATA } from "@/lib/seed-data";
 import { useInspections } from "@/hooks/use-dexie-data";
@@ -33,6 +38,22 @@ const STATUS_CONFIG = {
   attention: { label: "Attention", dotClass: "bg-orange-500", textClass: "text-orange-700 dark:text-orange-400", bgClass: "bg-orange-50 dark:bg-orange-950/40", borderClass: "border-orange-200 dark:border-orange-800" },
   critical: { label: "Critical", dotClass: "bg-red-500", textClass: "text-red-700 dark:text-red-400", bgClass: "bg-red-50 dark:bg-red-950/40", borderClass: "border-red-200 dark:border-red-800" },
 };
+
+const TYPE_ICONS: Record<string, typeof Fan> = {
+  WT: Fan,
+  WS: CloudSun,
+  SOL: Zap,
+  GEN: Zap,
+  PMP: Cpu,
+  HVAC: Cpu,
+  TRN: Zap,
+  RB: Cpu,
+};
+
+function getIconForAsset(assetId: string) {
+  const prefix = assetId.split("-")[0]?.toUpperCase() ?? "";
+  return TYPE_ICONS[prefix] || Fan;
+}
 
 const SYNC_CONFIG = {
   synced: { label: "Synced", dotClass: "bg-green-500", textClass: "text-green-700 dark:text-green-400", bgClass: "bg-green-50 dark:bg-green-950/40", borderClass: "border-green-200 dark:border-green-800" },
@@ -67,12 +88,28 @@ export default function InspectionsPage() {
   const [showFilters, setShowFilters] = useState(true);
   const [statsDismissed, setStatsDismissed] = useState(false);
   const [syncDismissed, setSyncDismissed] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<string[]>(["battery", "temperature", "signal"]);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [showAddFilter, setShowAddFilter] = useState(false);
+  const [dateFrom, setDateFrom] = useState("2025-01-01");
+  const [dateTo, setDateTo] = useState("2026-12-31");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const dateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (statusParam) setStatusFilter(statusParam);
   }, [statusParam]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dateRef.current && !dateRef.current.contains(e.target as Node)) {
+        setShowDatePicker(false);
+      }
+    }
+    if (showDatePicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDatePicker]);
 
   const filtered = useMemo(() => {
     let result = INSPECTIONS_DATA.filter((insp) => {
@@ -83,7 +120,18 @@ export default function InspectionsPage() {
         insp.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
       const matchesStatus = statusFilter === "all" || insp.status === statusFilter;
       const matchesInstallation = installationFilter === "all" || insp.installationId === installationFilter;
-      return matchesSearch && matchesStatus && matchesInstallation;
+      const matchesDate = insp.date >= dateFrom && insp.date <= dateTo;
+
+      let matchesSavedFilters = activeFilters.length === 0;
+      if (!matchesSavedFilters) {
+        if (activeFilters.includes("battery") && insp.batteryPct < 30) matchesSavedFilters = true;
+        if (activeFilters.includes("temperature") && insp.temperatureC !== null && insp.temperatureC > 35) matchesSavedFilters = true;
+        if (activeFilters.includes("vibration") && insp.tags.some((t) => t === "vibration")) matchesSavedFilters = true;
+        if (activeFilters.includes("signal") && insp.tags.some((t) => t === "signal")) matchesSavedFilters = true;
+        if (activeFilters.includes("overdue") && insp.isDraft) matchesSavedFilters = true;
+      }
+
+      return matchesSearch && matchesStatus && matchesInstallation && matchesDate && matchesSavedFilters;
     });
 
     result.sort((a, b) => {
@@ -94,7 +142,7 @@ export default function InspectionsPage() {
     });
 
     return result;
-  }, [search, statusFilter, installationFilter, sortField, sortDir, INSPECTIONS_DATA]);
+  }, [search, statusFilter, installationFilter, sortField, sortDir, dateFrom, dateTo, activeFilters, INSPECTIONS_DATA]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -109,7 +157,12 @@ export default function InspectionsPage() {
     return { total, critical, attention, ok, drafts, pendingSync };
   }, [INSPECTIONS_DATA]);
 
-  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, installationFilter, rowsPerPage]);
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, installationFilter, rowsPerPage, dateFrom, dateTo]);
+
+  function formatDateLabel(iso: string) {
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
 
   return (
     <div className="space-y-4 md:space-y-5">
@@ -175,10 +228,57 @@ export default function InspectionsPage() {
             <option value="attention">Attention</option>
             <option value="ok">OK</option>
           </select>
-          <div className="flex items-center gap-2">
+          <div className="relative" ref={dateRef}>
+            <button
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px] w-auto sm:w-full"
+            >
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">{dateFrom === "2025-01-01" && dateTo === "2026-12-31" ? "All dates" : `${formatDateLabel(dateFrom)} — ${formatDateLabel(dateTo)}`}</span>
+              <ChevronDown className={`h-3.5 w-3.5 ml-auto text-muted-foreground transition-transform ${showDatePicker ? "rotate-180" : ""}`} />
+            </button>
+            {showDatePicker && (
+              <div className="absolute top-full mt-2 right-0 z-50 bg-card border border-border rounded-lg shadow-lg p-4 space-y-3 w-[280px]">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">From</label>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-border bg-card text-sm text-foreground"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">To</label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-border bg-card text-sm text-foreground"
+                  />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-8 text-xs cursor-pointer"
+                    onClick={() => { setDateFrom("2025-01-01"); setDateTo("2026-12-31"); setShowDatePicker(false); }}
+                  >
+                    All Time
+                  </Button>
+                  <Button
+                    className="flex-1 h-8 text-xs cursor-pointer"
+                    onClick={() => setShowDatePicker(false)}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
-              className="h-12 px-4 text-sm gap-1.5 !h-[48px] !min-h-[48px]"
+              className="h-12 px-4 text-sm gap-1.5 !h-[48px] !min-h-[48px] w-auto sm:w-full"
               onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
             >
               <ArrowUpDown className="h-3.5 w-3.5" />
@@ -379,19 +479,19 @@ export default function InspectionsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Installation<br/><span className="font-normal">Location</span></th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Status</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-3 cursor-pointer min-w-[85px]" onClick={() => { setSortField("battery"); setSortDir(sortDir === "desc" ? "asc" : "desc"); }}>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 uppercase">Asset</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Status</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-3 cursor-pointer uppercase min-w-[90px]" onClick={() => { setSortField("battery"); setSortDir(sortDir === "desc" ? "asc" : "desc"); }}>
                   Battery % {sortField === "battery" && "↓"}
                 </th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Temperature</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Tags</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2">Sync</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Inspector</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 cursor-pointer min-w-[88px]" onClick={() => { setSortField("date"); setSortDir(sortDir === "desc" ? "asc" : "desc"); }}>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Temperature</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Tags</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-2 py-2 uppercase">Sync</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 uppercase">Inspector</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 cursor-pointer min-w-[88px] uppercase" onClick={() => { setSortField("date"); setSortDir(sortDir === "desc" ? "asc" : "desc"); }}>
                   Updated {sortField === "date" && "↓"}
                 </th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-3">Actions</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-3 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -399,15 +499,43 @@ export default function InspectionsPage() {
                 <tr>
                   <td colSpan={7} className="py-0">
                     <EmptyState
-                      icon={<Search className="h-8 w-8 text-muted-foreground" />}
+                      icon={
+                        <div className="relative">
+                          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                            <Search className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        </div>
+                      }
                       title="No inspections found"
-                      description="Try adjusting your search or filters to find what you're looking for."
+                      description={search
+                        ? `No results match "${search}" with the current filters.`
+                        : "No inspections match the current filters."
+                      }
+                      action={
+                        <div className="flex items-center gap-3">
+                          <Button
+                            className="h-[48px] px-5 text-sm font-semibold cursor-pointer"
+                            onClick={() => { setSearch(""); setStatusFilter("all"); setInstallationFilter("all"); setDateFrom("2025-01-01"); setDateTo("2026-12-31"); setActiveFilters([]); }}
+                          >
+                            Clear Filters
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-[48px] px-5 text-sm font-semibold cursor-pointer"
+                            onClick={() => window.location.href = "/inspection/new"}
+                          >
+                            Start New Inspection
+                          </Button>
+                        </div>
+                      }
+                      tip="Try searching by installation type (WT, WS, RB), date range, or status."
                     />
                   </td>
                 </tr>
               ) : paginatedData.map((insp) => {
                 const statusCfg = STATUS_CONFIG[insp.status];
                 const syncCfg = SYNC_CONFIG[insp.syncState];
+                const TypeIcon = getIconForAsset(insp.assetId);
 
                 return (
                   <tr
@@ -416,8 +544,15 @@ export default function InspectionsPage() {
                   >
                     
                     <td className="px-3 py-2 min-w-[140px]">
-                      <p className="text-sm font-medium text-foreground">{insp.assetId} — {insp.installation}</p>
-                      <p className="text-xs text-muted-foreground">{insp.location}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-lg bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center shrink-0">
+                          <TypeIcon className="h-4.5 w-4.5 text-sky-700 dark:text-sky-300" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{insp.assetId} — {insp.installation}</p>
+                          <p className="text-xs text-muted-foreground">{insp.location}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-2 py-2">
                       <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase ${statusCfg.bgClass} ${statusCfg.borderClass} ${statusCfg.textClass}`}>

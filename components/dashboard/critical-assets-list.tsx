@@ -1,8 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { AlertOctagon, AlertTriangle, ChevronRight, MapPin } from "lucide-react";
+import { AlertOctagon, AlertTriangle, ChevronRight, MapPin, Fan, CloudSun, Zap, Cpu } from "lucide-react";
 import { getCriticalAssets } from "@/lib/seed-data";
+
+const TYPE_ICONS: Record<string, typeof Fan> = {
+  "wind-turbine": Fan,
+  "weather-station": CloudSun,
+  "solar-panel": Zap,
+  generator: Zap,
+  pump: Cpu,
+  hvac: Cpu,
+  transformer: Zap,
+  robot: Cpu,
+};
 
 const statusStyles = {
   critical: {
@@ -51,12 +62,14 @@ export function CriticalAssetsList() {
             const metricLabel = asset.batteryPct < 30 ? "Battery Level" : asset.temperatureC > 50 ? "Temperature" : "Battery Level";
             const metricPercent = asset.batteryPct < 30 ? asset.batteryPct : asset.temperatureC > 50 ? Math.min(asset.temperatureC, 100) : asset.batteryPct;
 
+            const TypeIcon = TYPE_ICONS[asset.type] || Fan;
+
             return (
               <Link key={asset.id} href={`/installations/${asset.id}`}>
                 <div className={`px-4 md:px-5 py-3 md:py-4 border-b border-border ${style.borderColor} hover:bg-muted/30 transition-colors cursor-pointer`}>
                   <div className="flex items-center gap-3">
-                    <div className={`h-9 w-9 md:h-10 md:w-10 rounded-full ${style.iconBg} flex items-center justify-center shrink-0`}>
-                      <Icon className={`h-4 w-4 md:h-5 md:w-5 ${style.iconColor}`} />
+                    <div className="h-9 w-9 md:h-10 md:w-10 rounded-lg bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center shrink-0">
+                      <TypeIcon className="h-4.5 w-4.5 md:h-5 md:w-5 text-sky-700 dark:text-sky-300" />
                     </div>
 
                     <div className="flex-1 min-w-0">

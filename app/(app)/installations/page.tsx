@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Search,
-  Filter,
   Plus,
+  Filter,
   Fan,
   CloudSun,
   Cpu,
@@ -20,6 +21,10 @@ import {
   CheckCircle2,
   BarChart3,
   ArrowUpDown,
+  ChevronDown,
+  Eye,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { getInstallationCounts } from "@/lib/seed-data";
 import { useInstallations } from "@/hooks/use-dexie-data";
@@ -81,22 +86,45 @@ function HealthGauge({ percent, status }: { percent: number; status: string }) {
 }
 
 export default function InstallationsPage() {
+  const router = useRouter();
   const { installations: INSTALLATIONS_DATA } = useInstallations();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<"lastInspectedAt" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [showFilters, setShowFilters] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const rowsPerPage = 10;
 
   const counts = useMemo(() => getInstallationCounts(), []);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    if (openMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [openMenuId]);
+
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, typeFilter]);
+
   const filtered = useMemo(() => {
-    let items = INSTALLATIONS_DATA.filter(
-      (inst) =>
+    let items = INSTALLATIONS_DATA.filter((inst) => {
+      const matchesSearch =
         inst.name.toLowerCase().includes(search.toLowerCase()) ||
         inst.assetId.toLowerCase().includes(search.toLowerCase()) ||
-        inst.siteName.toLowerCase().includes(search.toLowerCase())
-    );
+        inst.siteName.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === "all" || inst.status === statusFilter;
+      const matchesType = typeFilter === "all" || inst.type === typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    });
     if (sortField === "lastInspectedAt") {
       items = [...items].sort((a, b) => {
         const cmp = a.lastInspectedAt.localeCompare(b.lastInspectedAt);
@@ -104,7 +132,7 @@ export default function InstallationsPage() {
       });
     }
     return items;
-  }, [search, sortField, sortDir, INSTALLATIONS_DATA]);
+  }, [search, statusFilter, typeFilter, sortField, sortDir, INSTALLATIONS_DATA]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginated = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -124,34 +152,93 @@ export default function InstallationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Installations</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Asset registry and health overview</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Asset registry and health overview • {INSTALLATIONS_DATA.length} assets</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search installations..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="pl-10 h-12 w-[240px]"
-            />
-          </div>
-          <Button variant="outline" className="h-12 px-4 cursor-pointer">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
           <Link href="/inspection/new">
-            <Button className="h-12 px-5 cursor-pointer">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="h-10 px-4 font-semibold text-sm !gap-1.5 cursor-pointer">
+              <Plus className="h-4 w-4" />
               New Inspection
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            className={`h-10 px-3 text-sm gap-1.5 cursor-pointer ${showFilters ? "border-primary text-primary" : ""}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+            Filter
+          </Button>
         </div>
       </div>
 
+      {/* Filters */}
+      {showFilters && (
+      <div className="flex flex-col md:flex-row gap-3 bg-card rounded-lg border border-border p-2.5 mt-[-8px]">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, asset ID, or site..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-12 text-sm bg-card"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="h-12 px-3 rounded-lg border border-border bg-card text-sm text-foreground cursor-pointer"
+        >
+          <option value="all">All Status</option>
+          <option value="critical">Critical</option>
+          <option value="attention">Attention</option>
+          <option value="ok">OK</option>
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="h-12 px-3 rounded-lg border border-border bg-card text-sm text-foreground cursor-pointer"
+        >
+          <option value="all">All Types</option>
+          <option value="wind-turbine">Wind Turbine</option>
+          <option value="weather-station">Weather Station</option>
+          <option value="solar-panel">Solar Panel</option>
+          <option value="generator">Generator</option>
+          <option value="transformer">Transformer</option>
+          <option value="robot">Autonomous Robot</option>
+          <option value="pump">Pump</option>
+          <option value="hvac">HVAC</option>
+        </select>
+        <Button
+          variant="outline"
+          className="h-12 px-4 text-sm gap-1.5"
+          onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
+        >
+          <ArrowUpDown className="h-3.5 w-3.5" />
+          Sort: {sortDir === "desc" ? "Newest" : "Oldest"}
+        </Button>
+        {(search || statusFilter !== "all" || typeFilter !== "all") && (
+          <Button
+            variant="ghost"
+            className="h-12 px-4 text-sm text-primary"
+            onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}
+          >
+            Clear all filters
+          </Button>
+        )}
+      </div>
+      )}
+
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20">
+        <button
+          onClick={() => setStatusFilter(statusFilter === "critical" ? "all" : "critical")}
+          className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all text-left ${
+            statusFilter === "critical"
+              ? "border-red-500 ring-2 ring-red-200 dark:ring-red-800 bg-red-50 dark:bg-red-950/30"
+              : "border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 hover:border-red-400"
+          }`}
+        >
           <div className="h-11 w-11 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
             <AlertOctagon className="h-5 w-5 text-red-600 dark:text-red-400" />
           </div>
@@ -160,8 +247,15 @@ export default function InstallationsPage() {
             <p className="text-xs font-medium text-red-600 dark:text-red-400">Critical</p>
             <p className="text-[10px] text-muted-foreground">Require immediate action</p>
           </div>
-        </div>
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20">
+        </button>
+        <button
+          onClick={() => setStatusFilter(statusFilter === "attention" ? "all" : "attention")}
+          className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all text-left ${
+            statusFilter === "attention"
+              ? "border-orange-500 ring-2 ring-orange-200 dark:ring-orange-800 bg-orange-50 dark:bg-orange-950/30"
+              : "border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 hover:border-orange-400"
+          }`}
+        >
           <div className="h-11 w-11 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center shrink-0">
             <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </div>
@@ -170,8 +264,15 @@ export default function InstallationsPage() {
             <p className="text-xs font-medium text-orange-600 dark:text-orange-400">Need Attention</p>
             <p className="text-[10px] text-muted-foreground">Should be reviewed</p>
           </div>
-        </div>
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+        </button>
+        <button
+          onClick={() => setStatusFilter(statusFilter === "ok" ? "all" : "ok")}
+          className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all text-left ${
+            statusFilter === "ok"
+              ? "border-green-500 ring-2 ring-green-200 dark:ring-green-800 bg-green-50 dark:bg-green-950/30"
+              : "border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20 hover:border-green-400"
+          }`}
+        >
           <div className="h-11 w-11 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
             <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
@@ -180,8 +281,11 @@ export default function InstallationsPage() {
             <p className="text-xs font-medium text-green-600 dark:text-green-400">OK</p>
             <p className="text-[10px] text-muted-foreground">All systems normal</p>
           </div>
-        </div>
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
+        </button>
+        <button
+          onClick={() => setStatusFilter("all")}
+          className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all text-left border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 hover:border-blue-400`}
+        >
           <div className="h-11 w-11 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
             <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
@@ -190,20 +294,28 @@ export default function InstallationsPage() {
             <p className="text-xs font-medium text-blue-600 dark:text-blue-400">Total Assets</p>
             <p className="text-[10px] text-muted-foreground">Across all sites</p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Table */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<Search className="h-8 w-8 text-muted-foreground" />}
+          icon={
+            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+              <Search className="h-8 w-8 text-muted-foreground" />
+            </div>
+          }
           title="No installations found"
-          description="Try adjusting your search terms or clearing filters to see results."
+          description={search
+            ? `No results match "${search}" with the current filters.`
+            : "No installations match the current filters."
+          }
           action={
-            <Button variant="outline" className="cursor-pointer" onClick={() => setSearch("")}>
-              Clear search
+            <Button className="h-[48px] px-5 text-sm font-semibold cursor-pointer" onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}>
+              Clear Filters
             </Button>
           }
+          tip="Try searching by asset ID (WT-01, WS-05), site name, or type."
         />
       ) : (
       <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -235,7 +347,7 @@ export default function InstallationsPage() {
                   ? "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800"
                   : "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800";
 
-                const inspectors = ["Simona D.", "Ahmed K.", "Mohammed R."];
+                const inspectors = ["Simona D.", "Bradley V", "Hezel WD"];
                 const inspectorIdx = Math.abs(inst.id.charCodeAt(inst.id.length - 1)) % inspectors.length;
 
                 return (
@@ -275,9 +387,39 @@ export default function InstallationsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <button className="p-1.5 hover:bg-accent rounded cursor-pointer">
-                        <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                      </button>
+                      <div className="relative" ref={openMenuId === inst.id ? menuRef : undefined}>
+                        <button
+                          className="p-1.5 hover:bg-accent rounded cursor-pointer"
+                          onClick={() => setOpenMenuId(openMenuId === inst.id ? null : inst.id)}
+                        >
+                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                        {openMenuId === inst.id && (
+                          <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 w-[160px]">
+                            <button
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer"
+                              onClick={() => { setOpenMenuId(null); router.push(`/installations/${inst.id}`); }}
+                            >
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                              View Details
+                            </button>
+                            <button
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer"
+                              onClick={() => { setOpenMenuId(null); router.push(`/installations/${inst.id}`); }}
+                            >
+                              <Pencil className="h-4 w-4 text-muted-foreground" />
+                              Edit
+                            </button>
+                            <button
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+                              onClick={() => { setOpenMenuId(null); }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
