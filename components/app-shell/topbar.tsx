@@ -177,7 +177,7 @@ export function Topbar() {
           <p className="text-[26px] font-bold text-foreground leading-tight">
             Good morning, Simona.
           </p>
-          <p className="text-xs text-black">
+          <p className="text-xs text-foreground">
             Here&apos;s what needs your attention today — Abu Dhabi Wind Farm
           </p>
         </div>
