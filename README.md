@@ -7,7 +7,7 @@ An offline-first inspection platform for field technicians working on remote ind
 
 ## Visual Reference
 Behance Case Study:
-[https://www.behance.net/your-link-here](https://www.behance.net/gallery/251164955/Field-Inspection-App-UX-Design)
+https://www.behance.net/gallery/251164955/Field-Inspection-App-UX-Design
 
 ## Quick Start
 
