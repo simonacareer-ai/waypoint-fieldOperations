@@ -174,18 +174,18 @@ export default function InspectionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/inspection/new">
-            <Button className="h-10 px-4 font-semibold text-sm !gap-1.5">
+          <Link href="/inspection/new" className="cursor-pointer  w-full sm:w-auto">
+            <Button className="h-10 px-1 font-semibold text-sm !gap-1.5 cursor-pointer">
               <Plus className="h-4 w-4" />
               New Inspection
             </Button>
           </Link>
-          <Button variant="outline" size="icon" className="h-10 px-3 font-semibold text-sm gap-1.5">
+          <Button variant="outline" size="icon" className="h-10 px-3 font-semibold text-sm gap-1.5 cursor-pointer">
             <Download className="h-4 w-4" /> Export
           </Button>
           <Button
             variant="outline"
-            className={`h-10 px-3 text-sm gap-1.5 ${showFilters ? "border-primary text-primary" : ""}`}
+            className={`h-10 px-3 text-sm gap-1.5 cursor-pointer ${showFilters ? "border-primary text-primary" : ""}`}
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="h-4 w-4" />
@@ -230,7 +230,7 @@ export default function InspectionsPage() {
           <div className="relative" ref={dateRef}>
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
-              className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px] w-auto sm:w-full"
+              className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px] w-full sm:w-auto"
             >
               <CalendarDays className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">{dateFrom === "2025-01-01" && dateTo === "2026-12-31" ? "All dates" : `${formatDateLabel(dateFrom)} — ${formatDateLabel(dateTo)}`}</span>
@@ -277,7 +277,7 @@ export default function InspectionsPage() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
-              className="h-12 px-4 text-sm gap-1.5 !h-[48px] !min-h-[48px] w-auto sm:w-full"
+              className="h-12 px-4 text-sm gap-1.5 !h-[48px] !min-h-[48px] w-full sm:w-auto"
               onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
             >
               <ArrowUpDown className="h-3.5 w-3.5" />

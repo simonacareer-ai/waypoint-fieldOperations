@@ -417,7 +417,7 @@ export default function HistoryPage() {
           <div className="relative" ref={dateRef}>
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
-              className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px] w-auto sm:w-full"
+              className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px] w-full sm:w-auto"
             >
               <span className="text-sm">{formatDateLabel(dateFrom)} — {formatDateLabel(dateTo)}</span>
               <ChevronDown className={`h-3.5 w-3.5 ml-auto text-muted-foreground transition-transform ${showDatePicker ? "rotate-180" : ""}`} />

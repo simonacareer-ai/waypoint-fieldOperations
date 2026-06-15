@@ -24,6 +24,7 @@ import {
   Eye,
   Pencil,
   Trash2,
+  CalendarDays,
 } from "lucide-react";
 import { getInstallationCounts } from "@/lib/seed-data";
 import { useInstallations } from "@/hooks/use-dexie-data";
@@ -94,8 +95,12 @@ export default function InstallationsPage() {
   const [sortField, setSortField] = useState<"lastInspectedAt" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showFilters, setShowFilters] = useState(true);
+  const [dateFrom, setDateFrom] = useState("2025-01-01");
+  const [dateTo, setDateTo] = useState("2030-12-31");
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const dateRef = useRef<HTMLDivElement>(null);
   const rowsPerPage = 10;
 
   const counts = useMemo(() => getInstallationCounts(), []);
@@ -112,7 +117,26 @@ export default function InstallationsPage() {
     }
   }, [openMenuId]);
 
-  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, typeFilter]);
+  useEffect(() => {
+    function handleDateOutside(e: MouseEvent) {
+      if (dateRef.current && !dateRef.current.contains(e.target as Node)) {
+        setShowDatePicker(false);
+      }
+    }
+    if (showDatePicker) {
+      document.addEventListener("mousedown", handleDateOutside);
+      return () => document.removeEventListener("mousedown", handleDateOutside);
+    }
+  }, [showDatePicker]);
+
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, typeFilter, dateFrom, dateTo]);
+
+  const formatDateLabel = (iso: string) => {
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const isDateFiltered = dateFrom !== "2025-01-01" || dateTo !== "2030-12-31";
 
   const filtered = useMemo(() => {
     let items = INSTALLATIONS_DATA.filter((inst) => {
@@ -122,7 +146,8 @@ export default function InstallationsPage() {
         inst.siteName.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || inst.status === statusFilter;
       const matchesType = typeFilter === "all" || inst.type === typeFilter;
-      return matchesSearch && matchesStatus && matchesType;
+      const matchesDate = inst.lastInspectedAt >= dateFrom && inst.lastInspectedAt <= dateTo;
+      return matchesSearch && matchesStatus && matchesType && matchesDate;
     });
     if (sortField === "lastInspectedAt") {
       items = [...items].sort((a, b) => {
@@ -131,7 +156,7 @@ export default function InstallationsPage() {
       });
     }
     return items;
-  }, [search, statusFilter, typeFilter, sortField, sortDir, INSTALLATIONS_DATA]);
+  }, [search, statusFilter, typeFilter, sortField, sortDir, dateFrom, dateTo, INSTALLATIONS_DATA]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginated = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -208,19 +233,68 @@ export default function InstallationsPage() {
           <option value="pump">Pump</option>
           <option value="hvac">HVAC</option>
         </select>
+        {/* Date Range Filter */}
+        <div className="relative" ref={dateRef}>
+          <button
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className={`h-12 px-3 rounded-lg border text-sm flex items-center gap-2 cursor-pointer transition-colors w-full sm:w-auto ${
+              isDateFiltered
+                ? "border-primary text-primary bg-primary/5"
+                : "border-border bg-card text-foreground hover:border-primary/50"
+            }`}
+          >
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <span className="whitespace-nowrap">
+              {isDateFiltered ? `${formatDateLabel(dateFrom)} – ${formatDateLabel(dateTo)}` : "All dates"}
+            </span>
+          </button>
+          {showDatePicker && (
+            <div className="absolute top-full mt-2 right-0 z-50 bg-card border border-border rounded-xl shadow-lg p-4 min-w-[260px]">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Date Range</p>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs text-muted-foreground">From</label>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">To</label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground"
+                  />
+                </div>
+                {isDateFiltered && (
+                  <button
+                    onClick={() => { setDateFrom("2025-01-01"); setDateTo("2030-12-31"); setShowDatePicker(false); }}
+                    className="text-xs text-primary font-medium hover:underline cursor-pointer h"
+                  >
+                    Reset dates
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         <Button
           variant="outline"
-          className="h-12 px-4 text-sm gap-1.5"
+          className="h-12 px-4 text-sm gap-1.5 cursor-pointer !min-h-[48px]"
           onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
         >
           <ArrowUpDown className="h-3.5 w-3.5" />
           Sort: {sortDir === "desc" ? "Newest" : "Oldest"}
         </Button>
-        {(search || statusFilter !== "all" || typeFilter !== "all") && (
+        {(search || statusFilter !== "all" || typeFilter !== "all" || isDateFiltered) && (
           <Button
             variant="ghost"
             className="h-12 px-4 text-sm text-primary"
-            onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}
+            onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); setDateFrom("2025-01-01"); setDateTo("2030-12-31"); }}
           >
             Clear all filters
           </Button>
