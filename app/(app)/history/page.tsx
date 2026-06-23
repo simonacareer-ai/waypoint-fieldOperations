@@ -131,7 +131,10 @@ function generateHistoryData(installationsData: typeof import("@/lib/seed-data")
     const syncIdx = (h >> 3) % 10;
 
     const entryDate = new Date(startDate.getTime() - i * (3600000 * 2 + (h % 7200000)));
-    const dateStr = `${entryDate.toLocaleDateString("en-CA")}`;
+    const yyyy = entryDate.getFullYear();
+    const mm = String(entryDate.getMonth() + 1).padStart(2, "0");
+    const dd = String(entryDate.getDate()).padStart(2, "0");
+    const dateStr = `${yyyy}-${mm}-${dd}`;
     const timeStr = entryDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
     let syncState: HistoryEntry["syncState"];
@@ -245,8 +248,8 @@ export default function HistoryPage() {
   const [showToast, setShowToast] = useState(true);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showAddFilter, setShowAddFilter] = useState(false);
-  const [dateFrom, setDateFrom] = useState("2026-01-01");
-  const [dateTo, setDateTo] = useState("2026-01-12");
+  const [dateFrom, setDateFrom] = useState("2025-01-01");
+  const [dateTo, setDateTo] = useState("2026-12-31");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -278,7 +281,9 @@ export default function HistoryPage() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dateRef.current && !dateRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement;
+      if (target.closest("input[type='date']")) return;
+      if (dateRef.current && !dateRef.current.contains(target)) {
         setShowDatePicker(false);
       }
     }
@@ -311,7 +316,18 @@ export default function HistoryPage() {
       const matchesInstallation = installationFilter === "all" ||
         INSTALLATIONS_DATA.find((i) => i.assetId === entry.assetId)?.id === installationFilter;
       const matchesDate = entry.date >= dateFrom && entry.date <= dateTo;
-      return matchesSearch && matchesStatus && matchesInstallation && matchesDate;
+
+      let matchesTags = activeTagFilters.length === 0;
+      if (!matchesTags) {
+        matchesTags = activeTagFilters.some((tagId) => {
+          if (tagId === "sync-issues") return entry.syncState === "failed" || entry.syncState === "pending";
+          if (tagId === "alerts") return entry.status === "critical" || entry.status === "attention";
+          if (tagId === "drafts") return entry.event.toLowerCase().includes("draft");
+          return entry.tags.includes(tagId);
+        });
+      }
+
+      return matchesSearch && matchesStatus && matchesInstallation && matchesDate && matchesTags;
     });
 
     result.sort((a, b) => {
@@ -321,12 +337,12 @@ export default function HistoryPage() {
     });
 
     return result;
-  }, [search, statusFilter, installationFilter, sortDir, dateFrom, dateTo, historyEntries]);
+  }, [search, statusFilter, installationFilter, sortDir, dateFrom, dateTo, activeTagFilters, historyEntries, INSTALLATIONS_DATA]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
-  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, installationFilter, rowsPerPage, dateFrom, dateTo]);
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, installationFilter, rowsPerPage, dateFrom, dateTo, activeTagFilters]);
 
   const removeTag = (tagId: string) => {
     setActiveTagFilters((prev) => prev.filter((id) => id !== tagId));
@@ -419,7 +435,7 @@ export default function HistoryPage() {
               onClick={() => setShowDatePicker(!showDatePicker)}
               className="h-12 px-3 rounded-lg border border-border bg-card text-sm flex items-center gap-2 text-foreground cursor-pointer min-w-[190px] w-full sm:w-auto"
             >
-              <span className="text-sm">{formatDateLabel(dateFrom)} — {formatDateLabel(dateTo)}</span>
+              <span className="text-sm">{dateFrom === "2025-01-01" && dateTo === "2026-12-31" ? "All dates" : `${formatDateLabel(dateFrom)} — ${formatDateLabel(dateTo)}`}</span>
               <ChevronDown className={`h-3.5 w-3.5 ml-auto text-muted-foreground transition-transform ${showDatePicker ? "rotate-180" : ""}`} />
             </button>
             {showDatePicker && (
@@ -561,7 +577,7 @@ export default function HistoryPage() {
                       action={
                         <Button
                           className="h-[48px] px-5 text-sm font-semibold cursor-pointer"
-                          onClick={() => { setSearch(""); }}
+                          onClick={() => { setSearch(""); setStatusFilter("all"); setInstallationFilter("all"); setDateFrom("2025-01-01"); setDateTo("2026-12-31"); setActiveTagFilters(DEFAULT_TAGS.map((t) => t.id)); }}
                         >
                           Clear Filters
                         </Button>

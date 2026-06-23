@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ConflictPanel } from "@/components/offline-sync/conflict-panel";
+import { useInspectionCounts } from "@/hooks/use-dexie-data";
 
 interface SyncItem {
   id: string;
@@ -67,9 +68,10 @@ export default function OfflineSyncPage() {
   const [syncingTotal] = useState(12);
   const [currentSyncItem] = useState("Uploading Work Log – Concrete Pour");
 
-  const savedLocally = 12;
-  const syncingCount = 5;
-  const syncedCount = 148;
+  const { counts } = useInspectionCounts();
+  const savedLocally = counts.pendingSync;
+  const syncingCount = counts.syncing;
+  const syncedCount = counts.synced;
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

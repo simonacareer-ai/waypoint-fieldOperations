@@ -4,11 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, CloudUpload, Clock, AlertTriangle, GitMerge, Wifi, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getInspectionCounts } from "@/lib/seed-data";
-
-const counts = getInspectionCounts();
+import { useInspectionCounts } from "@/hooks/use-dexie-data";
 
 export function SyncStatusCard() {
+  const { counts } = useInspectionCounts();
   const [syncing, setSyncing] = useState(false);
 
   const handleSync = () => {
@@ -40,7 +39,7 @@ export function SyncStatusCard() {
           <p className="text-[10px] text-muted-foreground mt-0.5">Pending</p>
         </div>
         <div className="px-3 py-2.5 text-center border-r border-border">
-          <p className="text-xl font-bold text-red-600 dark:text-red-400 leading-tight">2</p>
+          <p className="text-xl font-bold text-red-600 dark:text-red-400 leading-tight">{counts.failed}</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">Failed</p>
         </div>
         <div className="px-3 py-2.5 text-center">
@@ -67,7 +66,7 @@ export function SyncStatusCard() {
             <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">2 inspections failed</p>
+            <p className="text-sm font-semibold text-foreground">{counts.failed} inspections failed</p>
             <p className="text-xs text-muted-foreground">Network timeout · Retry available</p>
           </div>
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

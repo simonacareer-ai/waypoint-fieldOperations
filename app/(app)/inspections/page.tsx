@@ -29,7 +29,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { INSTALLATIONS_DATA } from "@/lib/seed-data";
-import { useInspections } from "@/hooks/use-dexie-data";
+import { useInspections, useInspectionCounts } from "@/hooks/use-dexie-data";
 import { EmptyState } from "@/components/states/empty-state";
 
 const STATUS_CONFIG = {
@@ -54,8 +54,9 @@ function getIconForAsset(assetId: string) {
   return TYPE_ICONS[prefix] || Fan;
 }
 
-const SYNC_CONFIG = {
+const SYNC_CONFIG: Record<string, { label: string; dotClass: string; textClass: string; bgClass: string; borderClass: string }> = {
   synced: { label: "Synced", dotClass: "bg-green-500", textClass: "text-green-700 dark:text-green-400", bgClass: "bg-green-50 dark:bg-green-950/40", borderClass: "border-green-200 dark:border-green-800" },
+  syncing: { label: "Syncing", dotClass: "bg-blue-500", textClass: "text-blue-700 dark:text-blue-400", bgClass: "bg-blue-50 dark:bg-blue-950/40", borderClass: "border-blue-200 dark:border-blue-800" },
   pending: { label: "Pending", dotClass: "bg-orange-500", textClass: "text-orange-700 dark:text-orange-400", bgClass: "bg-orange-50 dark:bg-orange-950/40", borderClass: "border-orange-200 dark:border-orange-800" },
   failed: { label: "Failed", dotClass: "bg-red-500", textClass: "text-red-700 dark:text-red-400", bgClass: "bg-red-50 dark:bg-red-950/40", borderClass: "border-red-200 dark:border-red-800" },
   "local-only": { label: "Local", dotClass: "bg-slate-400", textClass: "text-slate-600 dark:text-slate-400", bgClass: "bg-slate-100 dark:bg-slate-800", borderClass: "border-slate-200 dark:border-slate-700" },
@@ -100,7 +101,9 @@ export default function InspectionsPage() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dateRef.current && !dateRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement;
+      if (target.closest("input[type='date']")) return;
+      if (dateRef.current && !dateRef.current.contains(target)) {
         setShowDatePicker(false);
       }
     }
@@ -146,17 +149,9 @@ export default function InspectionsPage() {
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
-  const stats = useMemo(() => {
-    const total = INSPECTIONS_DATA.length;
-    const critical = INSPECTIONS_DATA.filter((i) => i.status === "critical").length;
-    const attention = INSPECTIONS_DATA.filter((i) => i.status === "attention").length;
-    const ok = INSPECTIONS_DATA.filter((i) => i.status === "ok").length;
-    const drafts = INSPECTIONS_DATA.filter((i) => i.isDraft).length;
-    const pendingSync = INSPECTIONS_DATA.filter((i) => i.syncState === "pending" || i.syncState === "local-only").length;
-    return { total, critical, attention, ok, drafts, pendingSync };
-  }, [INSPECTIONS_DATA]);
+  const { counts: stats } = useInspectionCounts();
 
-  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, installationFilter, rowsPerPage, dateFrom, dateTo]);
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, installationFilter, rowsPerPage, dateFrom, dateTo, activeFilters]);
 
   function formatDateLabel(iso: string) {
     const d = new Date(iso + "T00:00:00");

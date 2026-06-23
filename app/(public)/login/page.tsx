@@ -111,11 +111,11 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-border">
+        {/* <div className="mt-6 pt-6 border-t border-border">
           <Button variant="outline" className="w-full h-12" disabled>
             Sign in with SSO
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

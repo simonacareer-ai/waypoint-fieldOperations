@@ -84,6 +84,61 @@ export function useInspections() {
   return { inspections, loading: !seeded || raw === undefined };
 }
 
+export function useInspectionCounts() {
+  const { inspections, loading } = useInspections();
+
+  const counts = {
+    critical: 0,
+    attention: 0,
+    ok: 0,
+    total: 0,
+    drafts: 0,
+    pendingSync: 0,
+    syncing: 0,
+    synced: 0,
+    failed: 0,
+  };
+
+  if (!loading) {
+    for (const insp of inspections) {
+      counts[insp.status as "critical" | "attention" | "ok"]++;
+      counts.total++;
+      if (insp.isDraft) counts.drafts++;
+
+      const sync = insp.syncState;
+      if (sync === "pending" || sync === "local-only") {
+        counts.pendingSync++;
+      } else if (sync === "syncing") {
+        counts.syncing++;
+      } else if (sync === "synced") {
+        counts.synced++;
+      } else if (sync === "failed") {
+        counts.failed++;
+      }
+    }
+  }
+
+  return { counts, loading };
+}
+
+export function useInstallationCounts() {
+  const { installations, loading } = useInstallations();
+
+  const counts = { critical: 0, attention: 0, ok: 0, offline: 0, total: 0 };
+
+  if (!loading) {
+    for (const inst of installations) {
+      if (inst.status === "critical") counts.critical++;
+      else if (inst.status === "attention") counts.attention++;
+      else if (inst.status === "offline") counts.offline++;
+      else counts.ok++;
+      counts.total++;
+    }
+  }
+
+  return { counts, loading };
+}
+
 export async function addInspection(data: {
   installationId: string;
   status: string;

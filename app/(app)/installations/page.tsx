@@ -26,8 +26,7 @@ import {
   Trash2,
   CalendarDays,
 } from "lucide-react";
-import { getInstallationCounts } from "@/lib/seed-data";
-import { useInstallations } from "@/hooks/use-dexie-data";
+import { useInstallations, useInstallationCounts } from "@/hooks/use-dexie-data";
 import { EmptyState } from "@/components/states/empty-state";
 
 const TYPE_ICONS: Record<string, typeof Fan> = {
@@ -103,7 +102,7 @@ export default function InstallationsPage() {
   const dateRef = useRef<HTMLDivElement>(null);
   const rowsPerPage = 10;
 
-  const counts = useMemo(() => getInstallationCounts(), []);
+  const { counts } = useInstallationCounts();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -119,7 +118,9 @@ export default function InstallationsPage() {
 
   useEffect(() => {
     function handleDateOutside(e: MouseEvent) {
-      if (dateRef.current && !dateRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement;
+      if (target.closest("input[type='date']")) return;
+      if (dateRef.current && !dateRef.current.contains(target)) {
         setShowDatePicker(false);
       }
     }
@@ -285,7 +286,7 @@ export default function InstallationsPage() {
         <Button
           variant="outline"
           className="h-12 px-4 text-sm gap-1.5 cursor-pointer !min-h-[48px]"
-          onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
+          onClick={() => { setSortField("lastInspectedAt"); setSortDir(sortDir === "desc" ? "asc" : "desc"); }}
         >
           <ArrowUpDown className="h-3.5 w-3.5" />
           Sort: {sortDir === "desc" ? "Newest" : "Oldest"}
@@ -384,7 +385,7 @@ export default function InstallationsPage() {
             : "No installations match the current filters."
           }
           action={
-            <Button className="h-[48px] px-5 text-sm font-semibold cursor-pointer" onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); }}>
+            <Button className="h-[48px] px-5 text-sm font-semibold cursor-pointer" onClick={() => { setSearch(""); setStatusFilter("all"); setTypeFilter("all"); setDateFrom("2025-01-01"); setDateTo("2030-12-31"); }}>
               Clear Filters
             </Button>
           }

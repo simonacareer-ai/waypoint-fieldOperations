@@ -5,7 +5,7 @@
 
 export type InstallationStatus = "critical" | "attention" | "ok" | "offline";
 export type InspectionStatus = "critical" | "attention" | "ok";
-export type SyncState = "synced" | "pending" | "failed" | "local-only";
+export type SyncState = "synced" | "syncing" | "pending" | "failed" | "local-only";
 export type SignalStrength = "strong" | "moderate" | "weak";
 
 export interface Installation {
@@ -390,11 +390,12 @@ function generateInspections(): Inspection[] {
       else if (statusIdx < 5) status = "attention";
       else status = "ok";
 
-      const syncIdx = Math.abs(hashCode(`${inst.id}-sync-${i}`)) % 10;
+      const syncIdx = Math.abs(hashCode(`${inst.id}-sync-${i}`)) % 20;
       let syncState: SyncState;
-      if (syncIdx < 6) syncState = "synced";
-      else if (syncIdx < 8) syncState = "pending";
-      else if (syncIdx < 9) syncState = "failed";
+      if (syncIdx < 12) syncState = "synced";
+      else if (syncIdx < 15) syncState = "pending";
+      else if (syncIdx < 17) syncState = "syncing";
+      else if (syncIdx < 19) syncState = "failed";
       else syncState = "local-only";
 
       const inspectorIdx = Math.abs(hashCode(`${inst.id}-insp-${i}`)) % INSPECTORS.length;

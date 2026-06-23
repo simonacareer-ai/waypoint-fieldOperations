@@ -1,6 +1,8 @@
 import { db } from "./database";
 import { INSTALLATIONS_DATA, INSPECTIONS_DATA } from "@/lib/seed-data";
 
+const SEED_VERSION = 2;
+
 let seedPromise: Promise<void> | null = null;
 
 export async function seedDatabase(): Promise<void> {
@@ -10,6 +12,13 @@ export async function seedDatabase(): Promise<void> {
     const orphaned = await db.inspections.filter((r) => !r.installationId).toArray();
     if (orphaned.length > 0) {
       await db.inspections.bulkDelete(orphaned.map((r) => r.id));
+    }
+
+    const storedVersion = Number(localStorage.getItem("waypoint_seed_v") ?? "0");
+    if (storedVersion < SEED_VERSION) {
+      await db.inspections.clear();
+      await db.installations.clear();
+      localStorage.setItem("waypoint_seed_v", String(SEED_VERSION));
     }
 
     const count = await db.inspections.count();
